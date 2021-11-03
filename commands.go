@@ -47,7 +47,7 @@ func JoinReporter(v *VoiceInstance, m *discordgo.MessageCreate, s *discordgo.Ses
 	voiceChannelID := SearchVoiceChannel(m.Author.ID)
 	if voiceChannelID == "" {
 		log.Println("ERROR: Voice channel id not found.")
-		ChMessageSend(m.ChannelID, "<@"+m.Author.ID+"> まずVCにはいろ( ˘ω˘ )")
+		ChMessageSend(m.ChannelID, "<@"+m.Author.ID+"> VCに参加者がいません。")
 		return
 	}
 	if v != nil {
@@ -77,17 +77,7 @@ func JoinReporter(v *VoiceInstance, m *discordgo.MessageCreate, s *discordgo.Ses
 	}
 	// v.voice.Speaking(false)
 	log.Println("INFO: New Voice Instance created")
-	botUser, _ := dg.User("@me")
-	channel, err := dg.Channel(m.ChannelID)
-	if err == nil {
-		nickname := botUser.Username + "(" + channel.Name + ")"
-		updateNickName(v, nickname)
-	}
-	ChMessageSend(v.channelID, "おあ")
-}
-
-func updateNickName(v *VoiceInstance, nickname string) {
-	v.session.GuildMemberNickname(v.guildID, "@me", nickname)
+	ChMessageSend(v.channelID, "読み上げを開始します。")
 }
 
 // LeaveReporter
@@ -104,8 +94,7 @@ func LeaveReporter(v *VoiceInstance, m *discordgo.MessageCreate) {
 	delete(voiceInstances, v.guildID)
 	mutex.Unlock()
 	dg.UpdateGameStatus(0, o.DiscordStatus)
-	updateNickName(v, "")
-	ChMessageSend(v.channelID, "おつぅ")
+	ChMessageSend(v.channelID, "終了します。")
 }
 
 func ListBotReporter(m *discordgo.MessageCreate) {
@@ -291,7 +280,7 @@ func MakeRandomForOther(m *discordgo.MessageCreate) {
 	userID := commands[1]
 	user, _ := dg.User(userID)
 	if !user.Bot {
-		ChMessageSend(m.ChannelID, "声変えられるのはBotだけ( ˘ω˘ )")
+		ChMessageSend(m.ChannelID, "声変えられるのはBotのみです。")
 		return
 	}
 	makeRandomHandlerInternal(userID, m)
@@ -376,7 +365,7 @@ func SetStatusForOtherHandler(m *discordgo.MessageCreate) {
 		}
 	} else {
 		if !user.Bot {
-			ChMessageSend(m.ChannelID, "声変えられるのはBotだけ( ˘ω˘ )")
+			ChMessageSend(m.ChannelID, "声変えられるのはBotのみです。")
 			return
 		}
 	}
@@ -449,7 +438,10 @@ func SpeechText(v *VoiceInstance, m *discordgo.MessageCreate) {
 	}
 	// Replace Custom Emoji String
 	rep := regexp.MustCompile(`<:([^:]+):\d{18}>`)
-	content = rep.ReplaceAllString(content, "$1")
+	content = rep.ReplaceAllString(content, "えもじ")
+
+	arep := regexp.MustCompile(`<a:([^:]+):\d{18}>`)
+	content = arep.ReplaceAllString(content, "えもじ")
 
 	urlRep := regexp.MustCompile(`https?://[\w!\?/\+\-_~=;\.,\*&@#\$%\(\)'\[\]]+`)
 	content = urlRep.ReplaceAllString(content, "URL")
@@ -480,6 +472,7 @@ func SpeechText(v *VoiceInstance, m *discordgo.MessageCreate) {
 	}
 	speech := Speech{content, user, wavFileName}
 	speechSig := SpeechSignal{speech, v}
+	log.Println(speech,user)
 	go func() {
 		speechSignal <- speechSig
 	}()

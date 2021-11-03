@@ -172,8 +172,7 @@ func VoiceStatusUpdateHandler(s *discordgo.Session, voice *discordgo.VoiceStateU
 			mutex.Lock()
 			delete(voiceInstances, v.guildID)
 			mutex.Unlock()
-			updateNickName(v, "")
-			ChMessageSend(v.channelID, "すやぁ")
+			ChMessageSend(v.channelID, "終了します")
 		}
 	}
 }
