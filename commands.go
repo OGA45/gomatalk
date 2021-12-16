@@ -52,6 +52,8 @@ func JoinReporter(v *VoiceInstance, m *discordgo.MessageCreate, s *discordgo.Ses
 	}
 	if v != nil {
 		log.Println("INFO: Voice Instance already created.")
+		ChMessageSend(v.channelID, "すでに参加しています。")
+		return
 	} else {
 		guildID := SearchGuild(m.ChannelID)
 		// create new voice instance
@@ -431,6 +433,10 @@ func StopReporter(v *VoiceInstance, m *discordgo.MessageCreate) {
 }
 
 func SpeechText(v *VoiceInstance, m *discordgo.MessageCreate) {
+	if v.voice ==nil{
+		log.Println("ERROR: voice not found.")
+		return
+	}
 	content, err := m.Message.ContentWithMoreMentionsReplaced(v.session)
 	if err != nil {
 		log.Println("ERROR: Convert Error.")
@@ -448,7 +454,10 @@ func SpeechText(v *VoiceInstance, m *discordgo.MessageCreate) {
 
 	slashCommand := regexp.MustCompile(`</([^:]+):\d{18}>`)
 	content = slashCommand.ReplaceAllString(content, "$1")
-
+	if v.guildID == ""{
+		log.Println("ERROR: Voice Instance not already created.")
+		return
+	}
 	ReplaceWords(v.guildID, &content)
 
 	user, err := GetUserInfo(m.Author.ID)
@@ -472,7 +481,7 @@ func SpeechText(v *VoiceInstance, m *discordgo.MessageCreate) {
 	}
 	speech := Speech{content, user, wavFileName}
 	speechSig := SpeechSignal{speech, v}
-	log.Println(speech,user)
+	fmt.Printf("%+v\n",v)
 	go func() {
 		speechSignal <- speechSig
 	}()
