@@ -51,11 +51,11 @@ func JoinReporter(v *VoiceInstance, m *discordgo.MessageCreate, s *discordgo.Ses
 		ChMessageSend(m.ChannelID, "<@"+m.Author.ID+"> VCに参加者がいません。")
 		return
 	}
-	already := false
+	//already := false
 	if v != nil {
 		log.Println("INFO: Creating bran new voice instance.")
 		ChMessageSend(v.channelID, "すでに参加しています。")
-		already = true
+		//already = true
 	} // else {
 	guildID := SearchGuild(m.ChannelID)
 	// create new voice instance
