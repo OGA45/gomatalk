@@ -5,14 +5,14 @@ WORKDIR /workspace
 
 COPY .  /workspace/.
 
-RUN apt update 
-RUN apt install -y libopus-dev
+RUN apt-get update
+RUN apt-get install -y libopus-dev
 
 RUN go build
 
 FROM debian:buster-slim
 
-RUN apt-get update 
+RUN apt-get update
 RUN apt-get install -y build-essential unzip ffmpeg wget open-jtalk open-jtalk-mecab-naist-jdic
 
 RUN mkdir -p /workspace
