@@ -93,6 +93,10 @@ func ChMessageSend(textChannelID, message string) {
 	}
 }
 
+func ChFileSend(textChannelID, name, message string) {
+	dg.ChannelFileSend(textChannelID, name, strings.NewReader(message))
+}
+
 // ChMessageSendEmbed send an embeded messages.
 func ChMessageSendEmbed(textChannelID, title, description string, user discordgo.User) {
 	embed := discordgo.MessageEmbed{}
@@ -228,6 +232,8 @@ func MessageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			SetStatusForOtherHandler(m)
 		case "random_bot", "rb":
 			MakeRandomForOther(m)
+		case "reboot":
+			RebootReporter(m)
 		default:
 			return
 		}

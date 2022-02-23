@@ -15,7 +15,7 @@ import (
 // HelpReporter
 func HelpReporter(m *discordgo.MessageCreate) {
 	log.Println("INFO:", m.Author.Username, "send 'help'")
-	help := "```\nコマンド一覧\n" +
+	help := "コマンド一覧\n" +
 		o.DiscordPrefix + "help or " + o.DiscordPrefix + "h  ->  コマンド一覧と簡単な説明を表示.\n" +
 		o.DiscordPrefix + "summon or " + o.DiscordPrefix + "s  ->  読み上げを開始.\n" +
 		o.DiscordPrefix + "bye or " + o.DiscordPrefix + "b  ->  読み上げを終了.\n" +
@@ -35,9 +35,10 @@ func HelpReporter(m *discordgo.MessageCreate) {
 		"   threshold : ブツブツするときとか改善するかも?? 範囲(0.0~1.0)(初期値 0.5) \n" +
 		"   allpass : よくわからん 範囲(0 - 1.0) (0はauto)  \n" +
 		"   volume : 音量（dB） 範囲(-20~20)(初期値 1) \n" +
-		o.DiscordPrefix + "stop  ->  読み上げを一時停止.\n```"
-
-	ChMessageSend(m.ChannelID, help)
+		o.DiscordPrefix + "stop  ->  読み上げを一時停止."
+	log.Println("", m.ChannelID)
+	ChFileSend(m.ChannelID, "help.txt", help)
+	// ChMessageSend(m.ChannelID, help)
 	//ChMessageSendEmbed(m.ChannelID, "Help", help)
 }
 
@@ -50,27 +51,28 @@ func JoinReporter(v *VoiceInstance, m *discordgo.MessageCreate, s *discordgo.Ses
 		ChMessageSend(m.ChannelID, "<@"+m.Author.ID+"> VCに参加者がいません。")
 		return
 	}
+	already := false
 	if v != nil {
-		log.Println("INFO: Voice Instance already created.")
+		log.Println("INFO: Creating bran new voice instance.")
 		ChMessageSend(v.channelID, "すでに参加しています。")
-		return
-	} else {
-		guildID := SearchGuild(m.ChannelID)
-		// create new voice instance
-		mutex.Lock()
-		v = new(VoiceInstance)
-		voiceInstances[guildID] = v
-		v.guildID = guildID
-		v.session = s
-		v.stop = make(chan bool)
-		mutex.Unlock()
-		//v.InitVoice()
-	}
+		already = true
+	} // else {
+	guildID := SearchGuild(m.ChannelID)
+	// create new voice instance
+	mutex.Lock()
+	v = new(VoiceInstance)
+	voiceInstances[guildID] = v
+	v.guildID = guildID
+	v.session = s
+	v.stop = make(chan bool, 1)
+	mutex.Unlock()
+	//v.InitVoice()
+	// }
 	var err error
 	v.channelID = m.ChannelID
 	v.voice, err = dg.ChannelVoiceJoin(v.guildID, voiceChannelID, false, false)
 	if err != nil {
-		v.Stop(false)
+		v.Stop()
 		log.Println("ERROR: Error to join in a voice channel: ", err)
 		return
 	}
@@ -89,6 +91,11 @@ func LeaveReporter(v *VoiceInstance, m *discordgo.MessageCreate) {
 		log.Println("INFO: The bot is not joined in a voice channel")
 		return
 	}
+	closeConnection(v)
+	ChMessageSend(v.channelID, "おつぅ")
+}
+
+func closeConnection(v *VoiceInstance) {
 	time.Sleep(200 * time.Millisecond)
 	v.voice.Disconnect()
 	log.Println("INFO: Voice channel destroyed")
@@ -429,7 +436,18 @@ func StopReporter(v *VoiceInstance, m *discordgo.MessageCreate) {
 	if v.voice.ChannelID != voiceChannelID {
 		return
 	}
-	v.Stop(true)
+	v.Stop()
+}
+
+func RebootReporter(m *discordgo.MessageCreate) {
+	commands := strings.Fields(m.Content)
+	if len(commands) != 2 {
+		return
+	}
+	secret := commands[1]
+	if secret == o.Secret {
+		panic("Rebooting")
+	}
 }
 
 func SpeechText(v *VoiceInstance, m *discordgo.MessageCreate) {

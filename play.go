@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bwmarrin/dgvoice"
+	"github.com/omatztw/dgvoice"
 )
 
 const ()
@@ -30,13 +30,10 @@ func (v *VoiceInstance) PlayQueue(speech Speech) {
 		return
 	}
 	go func() {
-		// v.voiceMutex.Lock()
-		// defer v.voiceMutex.Unlock()
+		// 同一チャンネルで同時に読み上げるのを防ぐ。別のサーバーには影響しないようにしたい。
+		v.voiceMutex.Lock()
+		defer v.voiceMutex.Unlock()
 
-		// 複数チャンネルで同時に音声接続するとノイズが発生するため、globalのlockをかける
-		// この実装の場合、多くのチャンネルが同時に接続した場合に遅延が発生するのでできればチャネル毎のlockにしたいが。。
-		globalMutex.Lock()
-		defer globalMutex.Unlock()
 		for {
 			if len(v.queue) == 0 {
 				return
@@ -85,13 +82,13 @@ func (v *VoiceInstance) Talk(speech Speech) error {
 	case <-c1:
 		return nil
 	case <-time.After(30 * time.Second):
-		v.Stop(true)
+		v.Stop()
 		return nil
 	}
 }
 
-func (v *VoiceInstance) Stop(force bool) {
-	if v.speaking || force {
+func (v *VoiceInstance) Stop() {
+	if v.speaking {
 		v.stop <- true
 	}
 }
