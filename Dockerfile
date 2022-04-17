@@ -1,4 +1,4 @@
-FROM golang:1.18.1-bullseye as builder
+FROM golang:1.15.6-buster as builder
 
 RUN mkdir -p /workspace
 WORKDIR /workspace
@@ -7,14 +7,14 @@ COPY .  /workspace/.
 
 RUN apt-get update
 RUN apt-get install -y libopus-dev
-RUN go mod tidy
+
 RUN go build
 
-FROM debian:bullseye-slim
+FROM debian:buster-slim
 
 RUN apt-get update
 RUN apt-get install -y build-essential unzip ffmpeg wget open-jtalk open-jtalk-mecab-naist-jdic
-RUN apt-get upgrade -y
+
 RUN mkdir -p /workspace
 WORKDIR /workspace
 
