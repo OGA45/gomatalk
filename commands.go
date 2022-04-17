@@ -36,7 +36,6 @@ func HelpReporter(m *discordgo.MessageCreate) {
 		"   allpass : よくわからん 範囲(0 - 1.0) (0はauto)  \n" +
 		"   volume : 音量（dB） 範囲(-20~20)(初期値 1) \n" +
 		o.DiscordPrefix + "stop  ->  読み上げを一時停止."
-	log.Println("", m.ChannelID)
 	ChFileSend(m.ChannelID, "help.txt", help)
 	// ChMessageSend(m.ChannelID, help)
 	//ChMessageSendEmbed(m.ChannelID, "Help", help)
@@ -92,7 +91,6 @@ func LeaveReporter(v *VoiceInstance, m *discordgo.MessageCreate) {
 		return
 	}
 	closeConnection(v)
-	ChMessageSend(v.channelID, "おつぅ")
 }
 
 func closeConnection(v *VoiceInstance) {
