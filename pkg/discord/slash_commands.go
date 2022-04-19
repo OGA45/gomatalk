@@ -1,47 +1,45 @@
 package discord
+
 import (
 	"fmt"
 	"log"
 	"strings"
-	"github.com/OGA45/gomatalk/pkg/db"
-	"github.com/bwmarrin/discordgo"
+
 	"github.com/OGA45/gomatalk/pkg/config"
+	"github.com/OGA45/gomatalk/pkg/db"
 	global "github.com/OGA45/gomatalk/pkg/global_vars"
 	"github.com/OGA45/gomatalk/pkg/voice"
+	"github.com/bwmarrin/discordgo"
 )
 
-func Adding_slash_commands(){
+func Adding_slash_commands() {
 	log.Println("INFO: Adding commands...")
 	speedMinValue := 0.5
-	twentyMinValue :=-20.0
+	twentyMinValue := -20.0
 	ZeroMiinValue := 0.0
 	commands := []*discordgo.ApplicationCommand{
 		{
-			Name: "help",
+			Name:        "help",
 			Description: "コマンド一覧と簡単な説明を表示",
 		},
 		{
-			Name: "voices_list",
-			Description: "登録されている声の一覧を表示",
-		},
-		{
-			Name: "summon",
+			Name:        "summon",
 			Description: "読み上げを開始",
 		},
 		{
-			Name: "bye",
+			Name:        "bye",
 			Description: "読み上げを終了",
 		},
 		{
-			Name: "stop",
+			Name:        "stop",
 			Description: "読み上げを一時停止",
 		},
 		{
-			Name: "words_list",
+			Name:        "words_list",
 			Description: "辞書一覧を表示",
 		},
 		{
-			Name: "add_word",
+			Name:        "add_word",
 			Description: "辞書登録",
 			Options: []*discordgo.ApplicationCommandOption{
 
@@ -60,7 +58,7 @@ func Adding_slash_commands(){
 			},
 		},
 		{
-			Name: "delete_word",
+			Name:        "delete_word",
 			Description: "辞書削除",
 			Options: []*discordgo.ApplicationCommandOption{
 
@@ -73,11 +71,11 @@ func Adding_slash_commands(){
 			},
 		},
 		{
-			Name: "status",
+			Name:        "status",
 			Description: "現在の声の設定を表示",
 		},
 		{
-			Name: "update_voice",
+			Name:        "update_voice",
 			Description: "声の設定を変更",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -137,7 +135,7 @@ func Adding_slash_commands(){
 			},
 		},
 		{
-			Name: "add_bot",
+			Name:        "add_bot",
 			Description: "BOTを読み上げ対象に登録",
 			Options: []*discordgo.ApplicationCommandOption{
 
@@ -155,7 +153,7 @@ func Adding_slash_commands(){
 			},
 		},
 		{
-			Name: "delete_bot",
+			Name:        "delete_bot",
 			Description: "BOTを読み上げ対象から削除",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -175,7 +173,7 @@ func Adding_slash_commands(){
 			Description: "自分の声をﾗﾝﾀﾞﾑで変更する",
 		},
 		{
-			Name: "update_bot_voice",
+			Name:        "update_bot_voice",
 			Description: "BOTの音声を変更",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -241,7 +239,7 @@ func Adding_slash_commands(){
 			},
 		},
 		{
-			Name: "random_bot",
+			Name:        "random_bot",
 			Description: "BOTの声をﾗﾝﾀﾞﾑで変更する",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -253,7 +251,7 @@ func Adding_slash_commands(){
 			},
 		},
 		{
-			Name: "reboot",
+			Name:        "reboot",
 			Description: "BOTを再起動する",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -264,7 +262,10 @@ func Adding_slash_commands(){
 				},
 			},
 		},
-
+		{
+			Name:        "voices_list",
+			Description: "登録されている声の一覧を表示",
+		},
 	}
 	registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
 	for i, v := range commands {
@@ -282,77 +283,77 @@ func Help(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:"コマンド一覧",
-				Description:":warning: **注意:旧コマンドは非推奨なので表記から消しています。**",
-				Color:0x0000FF,
-				Fields:[]*discordgo.MessageEmbedField{
+				Title:       "コマンド一覧",
+				Description: ":warning: **注意:旧コマンドは非推奨なので表記から消しています。**",
+				Color:       0x0000FF,
+				Fields: []*discordgo.MessageEmbedField{
 					{
-						Name:"/help",
-						Value:"```コマンド一覧と簡単な説明を表示する```",
+						Name:  "/help",
+						Value: "```コマンド一覧と簡単な説明を表示する```",
 					},
 					{
-						Name:"/voices_list",
-						Value:"```登録されている声の一覧を表示する```",
+						Name:  "/voices_list",
+						Value: "```登録されている声の一覧を表示する```",
 					},
 					{
-						Name:"/summon",
-						Value:"```読み上げを開始する```",
+						Name:  "/summon",
+						Value: "```読み上げを開始する```",
 					},
 					{
-						Name:"/bye",
-						Value:"```読み上げを終了する```",
+						Name:  "/bye",
+						Value: "```読み上げを終了する```",
 					},
 					{
-						Name:"/add_word",
-						Value:"```単語を辞書に登録する```",
+						Name:  "/add_word",
+						Value: "```単語を辞書に登録する```",
 					},
 					{
-						Name:"/delete_word",
-						Value:"```単語を辞書から削除する```",
+						Name:  "/delete_word",
+						Value: "```単語を辞書から削除する```",
 					},
 					{
-						Name:"/words_list",
-						Value:"```辞書一覧を表示する```",
+						Name:  "/words_list",
+						Value: "```辞書一覧を表示する```",
 					},
 					{
-						Name:"/add_bot",
-						Value:"```BOTを読み上げ対象に登録する```",
+						Name:  "/add_bot",
+						Value: "```BOTを読み上げ対象に登録する```",
 					},
 					{
-						Name:"/delete_bot",
-						Value:"```BOTを読み上げ対象から削除する```",
+						Name:  "/delete_bot",
+						Value: "```BOTを読み上げ対象から削除する```",
 					},
 					{
-						Name:"/bots_list",
-						Value:"```読み上げ対象BOTの一覧を表示する```",
+						Name:  "/bots_list",
+						Value: "```読み上げ対象BOTの一覧を表示する```",
 					},
 					{
-						Name:"/random",
-						Value:"```自分の声をﾗﾝﾀﾞﾑで変更する```",
+						Name:  "/random",
+						Value: "```自分の声をﾗﾝﾀﾞﾑで変更する```",
 					},
 					{
-						Name:"/status",
-						Value:"```自分の現在の声の設定を表示する```",
+						Name:  "/status",
+						Value: "```自分の現在の声の設定を表示する```",
 					},
 					{
-						Name:"/update_voice",
-						Value:"```自分の声の設定を変更する```",
+						Name:  "/update_voice",
+						Value: "```自分の声の設定を変更する```",
 					},
 					{
-						Name:"/update_bot_voice",
-						Value:"```BOTの声の設定を変更する```",
+						Name:  "/update_bot_voice",
+						Value: "```BOTの声の設定を変更する```",
 					},
 					{
-						Name:"/random_bot",
-						Value:"```BOTの声をﾗﾝﾀﾞﾑで変更する```",
+						Name:  "/random_bot",
+						Value: "```BOTの声をﾗﾝﾀﾞﾑで変更する```",
 					},
 					{
-						Name:"/reboot",
-						Value:"```BOTを再起動する\n当然他のサーバーにも影響が出るので注意```",
+						Name:  "/reboot",
+						Value: "```BOTを再起動する\n当然他のサーバーにも影響が出るので注意```",
 					},
 					{
-						Name:"/stop",
-						Value:"```読み上げを一時停止```",
+						Name:  "/stop",
+						Value: "```読み上げを一時停止```",
 					},
 				},
 			}},
@@ -365,9 +366,9 @@ func Voices_list(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:"登録されている声の一覧",
-				Description:"```"+strings.Join(voice.VoiceList(),"\n")+"```",
-				Color:0x0000FF,
+				Title:       "登録されている声の一覧",
+				Description: "```" + strings.Join(voice.VoiceList(), "\n") + "```",
+				Color:       0x0000FF,
 			}},
 		},
 	})
@@ -376,17 +377,17 @@ func Voices_list(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func Summon(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Println("INFO:", i.Member.User, "send 'join'")
 	voiceChannelID := SearchVoiceChannel(i.Member.User.ID)
-	guildID :=i.GuildID
+	guildID := i.GuildID
 	if voiceChannelID == "" {
 		log.Println("ERROR: Voice channel id not found.")
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**貴方はVCに参加していません。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**貴方はVCに参加していません。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -399,16 +400,16 @@ func Summon(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**すでに参加しています。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**すでに参加しています。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
 		return
-	}else{
+	} else {
 		log.Println("INFO: New Voice Instance created")
 		guildID := guildID
 		// create new voice instance
@@ -430,11 +431,11 @@ func Summon(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**VCに参加できませんでした。開発者にお問い合わせください。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**VCに参加できませんでした。開発者にお問い合わせください。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -447,9 +448,9 @@ func Summon(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:":white_check_mark: 成功",
-				Description:"**読み上げを開始します。**",
-				Color:0x00FF00,
+				Title:       ":white_check_mark: 成功",
+				Description: "**読み上げを開始します。**",
+				Color:       0x00FF00,
 			}},
 		},
 	})
@@ -463,11 +464,11 @@ func Bye(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**VCに参加していません。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**VCに参加していません。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -478,9 +479,9 @@ func Bye(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:":white_check_mark: 成功",
-				Description:"**終了します。**",
-				Color:0x00FF00,
+				Title:       ":white_check_mark: 成功",
+				Description: "**終了します。**",
+				Color:       0x00FF00,
 			}},
 		},
 	})
@@ -494,11 +495,11 @@ func Stop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**VCに参加していません。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**VCに参加していません。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -509,11 +510,11 @@ func Stop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**自分が参加していないVCの読み上げを止めることは出来ません。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**自分が参加していないVCの読み上げを止めることは出来ません。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -524,9 +525,9 @@ func Stop(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:":white_check_mark: 成功",
-				Description:"**読み上げを一時停止します。**",
-				Color:0x00FF00,
+				Title:       ":white_check_mark: 成功",
+				Description: "**読み上げを一時停止します。**",
+				Color:       0x00FF00,
 			}},
 		},
 	})
@@ -538,11 +539,11 @@ func Words_list(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**情報の取得に失敗しました。開発者にお問い合わせください。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**情報の取得に失敗しました。開発者にお問い合わせください。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -552,16 +553,16 @@ func Words_list(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	for k, v := range wordsList {
 		msg += fmt.Sprintf("・単語: %s、読み: %s\n", k, v)
 	}
-	if msg==""{
-		msg="現在何も登録されていません。"
+	if msg == "" {
+		msg = "現在何も登録されていません。"
 	}
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:"登録されている単語一覧",
-				Description:"```"+msg+"```",
-				Color:0x0000FF,
+				Title:       "登録されている単語一覧",
+				Description: "```" + msg + "```",
+				Color:       0x0000FF,
 			}},
 		},
 	})
@@ -573,7 +574,7 @@ func Add_word(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	for _, opt := range options {
 		optionMap[opt.Name] = opt
 	}
-	var margs[2] string
+	var margs [2]string
 	if option, ok := optionMap["登録する単語"]; ok {
 		margs[0] = option.StringValue()
 		log.Println("INFO:", option.StringValue())
@@ -587,11 +588,11 @@ func Add_word(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:fmt.Sprintf("**単語「%s」の登録に失敗しました。**", margs[0]),
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: fmt.Sprintf("**単語「%s」の登録に失敗しました。**", margs[0]),
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -601,9 +602,9 @@ func Add_word(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:":white_check_mark: 成功",
-				Description:fmt.Sprintf("**単語「%s」を読み「%s」で登録しました。**", margs[0], margs[1]),
-				Color:0x00FF00,
+				Title:       ":white_check_mark: 成功",
+				Description: fmt.Sprintf("**単語「%s」を読み「%s」で登録しました。**", margs[0], margs[1]),
+				Color:       0x00FF00,
 			}},
 		},
 	})
@@ -626,30 +627,30 @@ func Delete_word(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**情報の取得に失敗しました。開発者にお問い合わせください。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**情報の取得に失敗しました。開発者にお問い合わせください。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
 		return
 	}
 	for k, _ := range wordsList {
-		if k==margs{
-			flag=false
+		if k == margs {
+			flag = false
 		}
 	}
-	if flag{
+	if flag {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:fmt.Sprintf("**単語「%s」は見つかりませんでした。**", margs),
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: fmt.Sprintf("**単語「%s」は見つかりませんでした。**", margs),
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -660,11 +661,11 @@ func Delete_word(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:fmt.Sprintf("**単語「%s」の削除に失敗しました**", margs),
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: fmt.Sprintf("**単語「%s」の削除に失敗しました**", margs),
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -674,9 +675,9 @@ func Delete_word(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:":white_check_mark: 成功",
-				Description:fmt.Sprintf("**単語「%s」を削除しました。**", margs),
-				Color:0x00FF00,
+				Title:       ":white_check_mark: 成功",
+				Description: fmt.Sprintf("**単語「%s」を削除しました。**", margs),
+				Color:       0x00FF00,
 			}},
 		},
 	})
@@ -692,11 +693,11 @@ func Status(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Flags:   1 << 6,
+					Flags: 1 << 6,
 					Embeds: []*discordgo.MessageEmbed{{
-						Title:":warning: 失敗",
-						Description:"**情報の取得に失敗しました。開発者にお問い合わせください。**",
-						Color:0xFF0000,
+						Title:       ":warning: 失敗",
+						Description: "**情報の取得に失敗しました。開発者にお問い合わせください。**",
+						Color:       0xFF0000,
 					}},
 				},
 			})
@@ -716,9 +717,9 @@ func Status(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:"現在の音声情報",
-				Description:msg,
-				Color:0x0000FF,
+				Title:       "現在の音声情報",
+				Description: msg,
+				Color:       0x0000FF,
 			}},
 		},
 	})
@@ -731,7 +732,7 @@ func Update_voice(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		optionMap[opt.Name] = opt
 	}
 	var voices string
-	var margs[6] float64
+	var margs [6]float64
 	if option, ok := optionMap["声の種類"]; ok {
 		voices = option.StringValue()
 	}
@@ -755,15 +756,15 @@ func Update_voice(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	_, ok := voice.Voices()[voices]
 	if !ok {
-		log.Println("Not find key",voices)
+		log.Println("Not find key", voices)
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:fmt.Sprintf("**「%s」というボイスが見つかりませんでした。**", voices),
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: fmt.Sprintf("**「%s」というボイスが見つかりませんでした。**", voices),
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -775,11 +776,11 @@ func Update_voice(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**情報の取得に失敗しました。開発者にお問い合わせください。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**情報の取得に失敗しました。開発者にお問い合わせください。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -806,9 +807,9 @@ func Update_voice(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:":white_check_mark: 成功",
-				Description:"**以下の情報で登録しました。\n"+msg+"**",
-				Color:0x00FF00,
+				Title:       ":white_check_mark: 成功",
+				Description: "**以下の情報で登録しました。\n" + msg + "**",
+				Color:       0x00FF00,
 			}},
 		},
 	})
@@ -836,11 +837,11 @@ func Add_bot(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Flags:   1 << 6,
+					Flags: 1 << 6,
 					Embeds: []*discordgo.MessageEmbed{{
-						Title:":warning: 失敗",
-						Description:fmt.Sprintf("**ID「%s」のBOTは見つかりませんでした。**", bot_id),
-						Color:0xFF0000,
+						Title:       ":warning: 失敗",
+						Description: fmt.Sprintf("**ID「%s」のBOTは見つかりませんでした。**", bot_id),
+						Color:       0xFF0000,
 					}},
 				},
 			})
@@ -855,11 +856,11 @@ func Add_bot(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:fmt.Sprintf("**BOT「%s」の登録に失敗しました。**", username),
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: fmt.Sprintf("**BOT「%s」の登録に失敗しました。**", username),
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -869,9 +870,9 @@ func Add_bot(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:":white_check_mark: 成功",
-				Description:fmt.Sprintf("**BOT「%s」を読み上げ対象に登録しました。**", username),
-				Color:0x00FF00,
+				Title:       ":white_check_mark: 成功",
+				Description: fmt.Sprintf("**BOT「%s」を読み上げ対象に登録しました。**", username),
+				Color:       0x00FF00,
 			}},
 		},
 	})
@@ -892,31 +893,31 @@ func Delete_bot(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**読み上げ対象BOTの一覧の取得に失敗しました。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**読み上げ対象BOTの一覧の取得に失敗しました。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
 		return
 	}
-	flag :=true
+	flag := true
 	for k, _ := range botList {
-		if k==bot_id{
-			flag=false
+		if k == bot_id {
+			flag = false
 		}
 	}
-	if flag{
+	if flag {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:fmt.Sprintf("**BOT ID「%s」は見つかりませんでした。**", bot_id),
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: fmt.Sprintf("**BOT ID「%s」は見つかりませんでした。**", bot_id),
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -927,11 +928,11 @@ func Delete_bot(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:fmt.Sprintf("**BOT ID「%s」の削除に失敗しました。**", bot_id),
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: fmt.Sprintf("**BOT ID「%s」の削除に失敗しました。**", bot_id),
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -941,9 +942,9 @@ func Delete_bot(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:":white_check_mark: 成功",
-				Description:fmt.Sprintf("**BOT ID「%s」を削除しました。**", bot_id),
-				Color:0x00FF00,
+				Title:       ":white_check_mark: 成功",
+				Description: fmt.Sprintf("**BOT ID「%s」を削除しました。**", bot_id),
+				Color:       0x00FF00,
 			}},
 		},
 	})
@@ -955,33 +956,33 @@ func Bots_list(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**読み上げ対象BOTの一覧の取得に失敗しました。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**読み上げ対象BOTの一覧の取得に失敗しました。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
 		return
-	}else if len(botList)==0{
+	} else if len(botList) == 0 {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:"登録されているBOT一覧",
-					Description:"**現在何も登録されていません。**",
-					Color:0x0000FF,
+					Title:       "登録されているBOT一覧",
+					Description: "**現在何も登録されていません。**",
+					Color:       0x0000FF,
 				}},
 			},
 		})
 		return
 	}
-	fields :=[]*discordgo.MessageEmbedField{}
+	fields := []*discordgo.MessageEmbedField{}
 	for k, v := range botList {
 		name := k
-		if v[0] == ""{
-			v[0]="None"
+		if v[0] == "" {
+			v[0] = "None"
 		}
 		botUser, err := Dg.User(k)
 		if err == nil {
@@ -1001,11 +1002,11 @@ func Bots_list(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
-						Flags:   1 << 6,
+						Flags: 1 << 6,
 						Embeds: []*discordgo.MessageEmbed{{
-							Title:":warning: 失敗",
-							Description:"**情報の取得に失敗しました。開発者にお問い合わせください。**",
-							Color:0xFF0000,
+							Title:       ":warning: 失敗",
+							Description: "**情報の取得に失敗しました。開発者にお問い合わせください。**",
+							Color:       0xFF0000,
 						}},
 					},
 				})
@@ -1013,16 +1014,16 @@ func Bots_list(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			}
 		}
 		userInfo := DBUser.UserInfo
-		fields=append(fields,&discordgo.MessageEmbedField{
+		fields = append(fields, &discordgo.MessageEmbedField{
 			Name: fmt.Sprintf("%s(%s) WAV LIST: %s\n", name, k, strings.Join(v, ",")),
 			Value: fmt.Sprintf("```%s, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f```",
-			userInfo.Voice,
-			userInfo.Speed,
-			userInfo.Tone,
-			userInfo.Intone,
-			userInfo.Threshold,
-			userInfo.AllPass,
-			userInfo.Volume),
+				userInfo.Voice,
+				userInfo.Speed,
+				userInfo.Tone,
+				userInfo.Intone,
+				userInfo.Threshold,
+				userInfo.AllPass,
+				userInfo.Volume),
 			Inline: false,
 		})
 	}
@@ -1030,16 +1031,16 @@ func Bots_list(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:"登録されているBOT一覧",
-				Fields:fields,
-				Color:0x0000FF,
+				Title:  "登録されているBOT一覧",
+				Fields: fields,
+				Color:  0x0000FF,
 			}},
 		},
 	})
 }
 
 func Random(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	userID:=i.Member.User.ID
+	userID := i.Member.User.ID
 	user := db.MakeRandom()
 	global.DB.AddUser(userID, user)
 	DBUser, err := global.DB.GetUser(i.Member.User.ID)
@@ -1048,11 +1049,11 @@ func Random(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**情報の取得に失敗しました。開発者にお問い合わせください。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**情報の取得に失敗しました。開発者にお問い合わせください。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -1071,9 +1072,9 @@ func Random(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:":white_check_mark: 成功",
-				Description:"**以下の情報で登録しました。\n"+msg+"**",
-				Color:0x00FF00,
+				Title:       ":white_check_mark: 成功",
+				Description: "**以下の情報で登録しました。\n" + msg + "**",
+				Color:       0x00FF00,
 			}},
 		},
 	})
@@ -1088,7 +1089,7 @@ func Update_bot_voice(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var bot_id string
 	var voices string
 	var username string
-	var margs[6] float64
+	var margs [6]float64
 	if option, ok := optionMap["変更するbotのid"]; ok {
 		bot_id = option.StringValue()
 	}
@@ -1120,81 +1121,80 @@ func Update_bot_voice(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Flags:   1 << 6,
+					Flags: 1 << 6,
 					Embeds: []*discordgo.MessageEmbed{{
-						Title:":warning: 失敗",
-						Description:fmt.Sprintf("**ID「%s」のBOTは見つかりませんでした。**", bot_id),
-						Color:0xFF0000,
+						Title:       ":warning: 失敗",
+						Description: fmt.Sprintf("**ID「%s」のBOTは見つかりませんでした。**", bot_id),
+						Color:       0xFF0000,
 					}},
 				},
 			})
 			return
 		}
-		username=webHook.Name
+		username = webHook.Name
 	} else {
 		if !bot_user.Bot {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Flags:   1 << 6,
+					Flags: 1 << 6,
 					Embeds: []*discordgo.MessageEmbed{{
-						Title:":warning: 失敗",
-						Description:"**声変えられるのはBotのみです。**",
-						Color:0xFF0000,
+						Title:       ":warning: 失敗",
+						Description: "**声変えられるのはBotのみです。**",
+						Color:       0xFF0000,
 					}},
 				},
 			})
 			return
 		}
-		username=bot_user.Username
+		username = bot_user.Username
 	}
 	botList, err := global.DB.ListBots(i.GuildID)
 	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**読み上げ対象BOTの一覧の取得に失敗しました。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**読み上げ対象BOTの一覧の取得に失敗しました。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
 		return
 	}
-	flag :=true
+	flag := true
 	for k, _ := range botList {
-		if k==bot_id{
-			flag=false
+		if k == bot_id {
+			flag = false
 		}
 	}
-	if flag{
+	if flag {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:fmt.Sprintf("**BOT ID「%s」は読み上げ登録されていません。**", bot_id),
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: fmt.Sprintf("**BOT ID「%s」は読み上げ登録されていません。**", bot_id),
+					Color:       0xFF0000,
 				}},
 			},
 		})
 		return
 	}
-
 	_, ok := voice.Voices()[voices]
 	if !ok {
-		log.Println("Not find key",voices)
+		log.Println("Not find key", voices)
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:fmt.Sprintf("**「%s」というボイスが見つかりませんでした。**", voices),
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: fmt.Sprintf("**「%s」というボイスが見つかりませんでした。**", voices),
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -1206,11 +1206,11 @@ func Update_bot_voice(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**情報の取得に失敗しました。開発者にお問い合わせください。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**情報の取得に失敗しました。開発者にお問い合わせください。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -1237,9 +1237,9 @@ func Update_bot_voice(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:":white_check_mark: 成功",
-				Description:fmt.Sprintf("**BOT「%s」の音声を以下の情報で登録しました。**\n", username)+msg,
-				Color:0x00FF00,
+				Title:       ":white_check_mark: 成功",
+				Description: fmt.Sprintf("**BOT「%s」の音声を以下の情報で登録しました。**\n", username) + msg,
+				Color:       0x00FF00,
 			}},
 		},
 	})
@@ -1263,64 +1263,64 @@ func Random_bot(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Flags:   1 << 6,
+					Flags: 1 << 6,
 					Embeds: []*discordgo.MessageEmbed{{
-						Title:":warning: 失敗",
-						Description:fmt.Sprintf("**ID「%s」のBOTは見つかりませんでした。**", bot_id),
-						Color:0xFF0000,
+						Title:       ":warning: 失敗",
+						Description: fmt.Sprintf("**ID「%s」のBOTは見つかりませんでした。**", bot_id),
+						Color:       0xFF0000,
 					}},
 				},
 			})
 			return
 		}
-		username=webHook.Name
+		username = webHook.Name
 	} else {
 		if !bot_user.Bot {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Flags:   1 << 6,
+					Flags: 1 << 6,
 					Embeds: []*discordgo.MessageEmbed{{
-						Title:":warning: 失敗",
-						Description:"**声変えられるのはBotのみです。**",
-						Color:0xFF0000,
+						Title:       ":warning: 失敗",
+						Description: "**声変えられるのはBotのみです。**",
+						Color:       0xFF0000,
 					}},
 				},
 			})
 			return
 		}
-		username=bot_user.Username
+		username = bot_user.Username
 	}
 	botList, err := global.DB.ListBots(i.GuildID)
 	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**読み上げ対象BOTの一覧の取得に失敗しました。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**読み上げ対象BOTの一覧の取得に失敗しました。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
 		return
 	}
-	flag :=true
+	flag := true
 	for k, _ := range botList {
-		if k==bot_id{
-			flag=false
+		if k == bot_id {
+			flag = false
 		}
 	}
-	if flag{
+	if flag {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:fmt.Sprintf("**BOT ID「%s」は見つかりませんでした。**", bot_id),
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: fmt.Sprintf("**BOT ID「%s」は見つかりませんでした。**", bot_id),
+					Color:       0xFF0000,
 				}},
 			},
 		})
@@ -1347,9 +1347,9 @@ func Random_bot(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Embeds: []*discordgo.MessageEmbed{{
-				Title:":white_check_mark: 成功",
-				Description:fmt.Sprintf("**BOT「%s」の音声を以下の情報で登録しました。**\n", username)+msg,
-				Color:0x00FF00,
+				Title:       ":white_check_mark: 成功",
+				Description: fmt.Sprintf("**BOT「%s」の音声を以下の情報で登録しました。**\n", username) + msg,
+				Color:       0x00FF00,
 			}},
 		},
 	})
@@ -1370,22 +1370,22 @@ func Reboot(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":white_check_mark: 成功",
-					Description:"**再起動します。**",
-					Color:0x00FF00,
+					Title:       ":white_check_mark: 成功",
+					Description: "**再起動します。**",
+					Color:       0x00FF00,
 				}},
 			},
 		})
 		panic("Rebooting")
-	}else{
+	} else {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
+				Flags: 1 << 6,
 				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**パスワードが違います。**",
-					Color:0xFF0000,
+					Title:       ":warning: 失敗",
+					Description: "**パスワードが違います。**",
+					Color:       0xFF0000,
 				}},
 			},
 		})
