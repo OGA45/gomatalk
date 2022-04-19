@@ -950,6 +950,18 @@ func Bots_list(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		})
 		return
+	}else if len(botList)==0{
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{{
+					Title:"登録されているBOT一覧",
+					Description:"**現在何も登録されていません。**",
+					Color:0x0000FF,
+				}},
+			},
+		})
+		return
 	}
 	fields :=[]*discordgo.MessageEmbedField{}
 	for k, v := range botList {
