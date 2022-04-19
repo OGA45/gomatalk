@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/boltdb/bolt"
 	"github.com/OGA45/gomatalk/pkg/db"
 	global "github.com/OGA45/gomatalk/pkg/global_vars"
 	"github.com/OGA45/gomatalk/pkg/model"
+	"github.com/boltdb/bolt"
 )
 
 const (

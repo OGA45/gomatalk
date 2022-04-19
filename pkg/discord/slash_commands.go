@@ -622,6 +622,20 @@ func Delete_word(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		log.Println("INFO:", option.StringValue())
 	}
 	wordsList, err := global.DB.ListWords(i.GuildID)
+	if err != nil {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Flags:   1 << 6,
+				Embeds: []*discordgo.MessageEmbed{{
+					Title:":warning: 失敗",
+					Description:"**情報の取得に失敗しました。開発者にお問い合わせください。**",
+					Color:0xFF0000,
+				}},
+			},
+		})
+		return
+	}
 	for k, _ := range wordsList {
 		if k==margs{
 			flag=false
@@ -1211,21 +1225,6 @@ func Update_bot_voice(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	userInfo.AllPass = margs[4]
 	userInfo.Volume = margs[5]
 	global.DB.AddUser(bot_id, userInfo)
-	if err != nil {
-		log.Println("ERROR: Cannot get user information.")
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Flags:   1 << 6,
-				Embeds: []*discordgo.MessageEmbed{{
-					Title:":warning: 失敗",
-					Description:"**情報の取得に失敗しました。開発者にお問い合わせください。**",
-					Color:0xFF0000,
-				}},
-			},
-		})
-		return
-	}
 	msg := fmt.Sprintf("voice: %s, speed: %.1f, tone: %.1f, intone: %.1f, threshold: %.1f, allpass: %.1f, volume: %.1f",
 		userInfo.Voice,
 		userInfo.Speed,
@@ -1293,6 +1292,20 @@ func Random_bot(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		username=bot_user.Username
 	}
 	botList, err := global.DB.ListBots(i.GuildID)
+	if err != nil {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Flags:   1 << 6,
+				Embeds: []*discordgo.MessageEmbed{{
+					Title:":warning: 失敗",
+					Description:"**読み上げ対象BOTの一覧の取得に失敗しました。**",
+					Color:0xFF0000,
+				}},
+			},
+		})
+		return
+	}
 	flag :=true
 	for k, _ := range botList {
 		if k==bot_id{

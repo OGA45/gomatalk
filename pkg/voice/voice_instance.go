@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/OGA45/gomatalk/pkg/model"
 	"github.com/bwmarrin/discordgo"
 	"github.com/omatztw/dgvoice"
-	"github.com/OGA45/gomatalk/pkg/model"
 )
 
 type VoiceInstance struct {

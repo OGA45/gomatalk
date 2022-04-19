@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
 	"github.com/OGA45/gomatalk/pkg/config"
 	"github.com/OGA45/gomatalk/pkg/db"
 	global "github.com/OGA45/gomatalk/pkg/global_vars"
@@ -17,6 +16,7 @@ import (
 	"github.com/OGA45/gomatalk/pkg/play"
 	"github.com/OGA45/gomatalk/pkg/util"
 	"github.com/OGA45/gomatalk/pkg/voice"
+	"github.com/bwmarrin/discordgo"
 )
 
 // HelpReporter
