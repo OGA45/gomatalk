@@ -3,8 +3,8 @@ package global
 import (
 	"sync"
 
-	"github.com/omatztw/gomatalk/pkg/db"
-	"github.com/omatztw/gomatalk/pkg/voice"
+	"github.com/OGA45/gomatalk/pkg/db"
+	"github.com/OGA45/gomatalk/pkg/voice"
 )
 
 var (

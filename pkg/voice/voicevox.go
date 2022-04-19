@@ -12,8 +12,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/omatztw/gomatalk/pkg/config"
-	"github.com/omatztw/gomatalk/pkg/model"
+	"github.com/OGA45/gomatalk/pkg/config"
+	"github.com/OGA45/gomatalk/pkg/model"
 )
 
 func GenerateAudioQuery(speech Speech) (model.AudioQuery, error) {

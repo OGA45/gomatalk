@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/omatztw/gomatalk/pkg/model"
+	"github.com/OGA45/gomatalk/pkg/model"
 	"github.com/spf13/viper"
 )
 

@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/omatztw/gomatalk/pkg/db"
-	global "github.com/omatztw/gomatalk/pkg/global_vars"
-	"github.com/omatztw/gomatalk/pkg/model"
+	"github.com/OGA45/gomatalk/pkg/db"
+	global "github.com/OGA45/gomatalk/pkg/global_vars"
+	"github.com/OGA45/gomatalk/pkg/model"
 )
 
 const (

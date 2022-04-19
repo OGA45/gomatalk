@@ -7,11 +7,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/omatztw/gomatalk/pkg/boltdb"
-	"github.com/omatztw/gomatalk/pkg/config"
-	"github.com/omatztw/gomatalk/pkg/db"
-	"github.com/omatztw/gomatalk/pkg/discord"
-	global "github.com/omatztw/gomatalk/pkg/global_vars"
+	"github.com/OGA45/gomatalk/pkg/boltdb"
+	"github.com/OGA45/gomatalk/pkg/config"
+	"github.com/OGA45/gomatalk/pkg/db"
+	"github.com/OGA45/gomatalk/pkg/discord"
+	global "github.com/OGA45/gomatalk/pkg/global_vars"
 )
 
 func WavGC() {

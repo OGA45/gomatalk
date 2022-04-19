@@ -7,8 +7,8 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/omatztw/gomatalk/pkg/config"
-	"github.com/omatztw/gomatalk/pkg/util"
+	"github.com/OGA45/gomatalk/pkg/config"
+	"github.com/OGA45/gomatalk/pkg/util"
 )
 
 func CreateAquestalkWav(speech Speech) (string, error) {

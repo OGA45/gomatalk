@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/omatztw/gomatalk/pkg/config"
+	"github.com/OGA45/gomatalk/pkg/config"
 )
 
 const (

@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	global "github.com/omatztw/gomatalk/pkg/global_vars"
-	"github.com/omatztw/gomatalk/pkg/voice"
+	global "github.com/OGA45/gomatalk/pkg/global_vars"
+	"github.com/OGA45/gomatalk/pkg/voice"
 )
 
 const ()

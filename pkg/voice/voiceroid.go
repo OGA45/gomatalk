@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/omatztw/gomatalk/pkg/config"
+	"github.com/OGA45/gomatalk/pkg/config"
 )
 
 func CreateVoiceroidWav(speech Speech) (string, error) {

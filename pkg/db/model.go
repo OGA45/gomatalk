@@ -3,7 +3,7 @@ package db
 import (
 	"time"
 
-	"github.com/omatztw/gomatalk/pkg/model"
+	"github.com/OGA45/gomatalk/pkg/model"
 )
 
 type Guild struct {
