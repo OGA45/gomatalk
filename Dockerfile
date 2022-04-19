@@ -8,7 +8,7 @@ COPY .  /workspace/.
 RUN apt-get update
 RUN apt-get install -y libopus-dev
 RUN go mod tidy
-RUN go build
+RUN go build -p 24
 
 FROM debian:bullseye-slim
 
