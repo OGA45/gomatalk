@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/omatztw/gomatalk/pkg/config"
-	"github.com/omatztw/gomatalk/pkg/db"
-	global "github.com/omatztw/gomatalk/pkg/global_vars"
-	"github.com/omatztw/gomatalk/pkg/model"
-	"github.com/omatztw/gomatalk/pkg/play"
-	"github.com/omatztw/gomatalk/pkg/util"
-	"github.com/omatztw/gomatalk/pkg/voice"
+	"github.com/OGA45/gomatalk/pkg/config"
+	"github.com/OGA45/gomatalk/pkg/db"
+	global "github.com/OGA45/gomatalk/pkg/global_vars"
+	"github.com/OGA45/gomatalk/pkg/model"
+	"github.com/OGA45/gomatalk/pkg/play"
+	"github.com/OGA45/gomatalk/pkg/util"
+	"github.com/OGA45/gomatalk/pkg/voice"
 )
 
 // HelpReporter
@@ -42,7 +42,7 @@ func HelpReporter(m *discordgo.MessageCreate) {
 		"   threshold : ブツブツするときとか改善するかも?? 範囲(0.0~1.0)(初期値 0.5) \n" +
 		"   allpass : よくわからん 範囲(0 - 1.0) (0はauto)  \n" +
 		"   volume : 音量（dB） 範囲(-20~20)(初期値 1) \n" +
-		o.DiscordPrefix + "stop  ->  読み上げを一時停止."
+		config.O.Discord.Prefix + "stop  ->  読み上げを一時停止."
 	ChFileSend(m.ChannelID, "help.txt", help)
 	// ChMessageSend(m.ChannelID, help)
 	//ChMessageSendEmbed(m.ChannelID, "Help", help)
@@ -57,10 +57,10 @@ func JoinReporter(v *voice.VoiceInstance, m *discordgo.MessageCreate, s *discord
 		ChMessageSend(m.ChannelID, "<@"+m.Author.ID+"> VCに参加者がいません。")
 		return
 	}
-	//already := false
+	already := false
 	if v != nil {
 		log.Println("INFO: A voice instance is already created.")
-		ChMessageSend(v.channelID, "すでに参加しています。")
+		ChMessageSend(m.ChannelID, "すでに参加しています。")
 		if v.ChannelID == m.ChannelID {
 			already = true
 		}
@@ -89,8 +89,10 @@ func JoinReporter(v *voice.VoiceInstance, m *discordgo.MessageCreate, s *discord
 		v.Voice.LogLevel = discordgo.LogDebug
 	}
 	// v.voice.Speaking(false)
-	log.Println("INFO: New Voice Instance created")
-	ChMessageSend(v.channelID, "読み上げを開始します。")
+	if !already {
+		ChMessageSend(v.ChannelID, config.O.Greeting["join"])
+	}
+	ChMessageSend(m.ChannelID, "読み上げを開始します。")
 }
 
 // LeaveReporter
