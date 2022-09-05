@@ -4,16 +4,18 @@ import (
 	"log"
 	"strings"
 	"time"
-	"github.com/bwmarrin/discordgo"
+
 	"github.com/OGA45/gomatalk/pkg/config"
 	global "github.com/OGA45/gomatalk/pkg/global_vars"
 	"github.com/OGA45/gomatalk/pkg/play"
 	"github.com/OGA45/gomatalk/pkg/voice"
+	"github.com/bwmarrin/discordgo"
 )
 
 var (
 	Dg *discordgo.Session
 )
+
 // DiscordConnect make a new connection to Discord
 func DiscordConnect() (err error) {
 	Dg, err = discordgo.New("Bot " + config.O.Discord.Token)
@@ -104,7 +106,7 @@ func ChFileSend(textChannelID, name, message string) {
 	Dg.ChannelFileSend(textChannelID, name, strings.NewReader(message))
 }
 
-// ChMessageSendEmbed send an embeded messages.
+// ChMessageSendEmbed send an embedded messages.
 func ChMessageSendEmbed(textChannelID, title, description string, user discordgo.User) {
 	embed := discordgo.MessageEmbed{}
 	embed.Title = title
@@ -137,23 +139,23 @@ func ConnectHandler(s *discordgo.Session, connect *discordgo.Connect) {
 // SlashCommandHandler
 func SlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	commandHandlers := map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"help": Help,
-		"voices_list": Voices_list,
-		"summon": Summon,
-		"bye": Bye,
-		"stop": Stop,
-		"words_list": Words_list,
-		"add_word": Add_word,
-		"delete_word": Delete_word,
-		"status": Status,
-		"update_voice": Update_voice,
-		"add_bot": Add_bot,
-		"delete_bot": Delete_bot,
-		"bots_list": Bots_list,
-		"random": Random,
+		"help":             Help,
+		"voices_list":      Voices_list,
+		"summon":           Summon,
+		"bye":              Bye,
+		"stop":             Stop,
+		"words_list":       Words_list,
+		"add_word":         Add_word,
+		"delete_word":      Delete_word,
+		"status":           Status,
+		"update_voice":     Update_voice,
+		"add_bot":          Add_bot,
+		"delete_bot":       Delete_bot,
+		"bots_list":        Bots_list,
+		"random":           Random,
 		"update_bot_voice": Update_bot_voice,
-		"random_bot": Random_bot,
-		"reboot": Reboot,
+		"random_bot":       Random_bot,
+		"reboot":           Reboot,
 	}
 	if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
 		h(s, i)

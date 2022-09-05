@@ -1184,7 +1184,6 @@ func Update_bot_voice(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		})
 		return
 	}
-
 	_, ok := voice.Voices()[voices]
 	if !ok {
 		log.Println("Not find key", voices)

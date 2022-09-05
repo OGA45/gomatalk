@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 
+	"github.com/OGA45/gomatalk/pkg/model"
 	"github.com/fsnotify/fsnotify"
 	"github.com/OGA45/gomatalk/pkg/model"
 	"github.com/spf13/viper"

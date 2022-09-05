@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/OGA45/gomatalk/pkg/model"
+	"github.com/OGA45/gomatalk/pkg/voice"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/OGA45/gomatalk/pkg/model"
-	"github.com/OGA45/gomatalk/pkg/voice"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
