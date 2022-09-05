@@ -1,7 +1,9 @@
 version: "3.9"
 services:
   gomatalk:
-    image: OGA45/gomatalk
+    build:
+      context: .
+    container_name: gomatalk
     restart: always
     environment:
       TZ: Asia/Tokyo

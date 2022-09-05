@@ -1,20 +1,20 @@
-FROM golang:1.15.6-buster as builder
+FROM golang:1.18.1-bullseye as builder
 
 RUN mkdir -p /workspace
 WORKDIR /workspace
 
 COPY .  /workspace/.
 
-RUN apt update 
-RUN apt install -y libopus-dev
+RUN apt-get update
+RUN apt-get install -y libopus-dev
+RUN go mod tidy
+RUN go build -p 24
 
-RUN go build
+FROM debian:bullseye-slim
 
-FROM debian:buster-slim
-
-RUN apt-get update 
+RUN apt-get update
 RUN apt-get install -y build-essential unzip ffmpeg wget open-jtalk open-jtalk-mecab-naist-jdic
-
+RUN apt-get upgrade -y
 RUN mkdir -p /workspace
 WORKDIR /workspace
 
@@ -46,5 +46,7 @@ RUN mkdir wav
 VOLUME /workspace/wav
 RUN mkdir voices
 VOLUME /workspace/voices
+RUN mkdir migrates
+COPY migrates  /workspace/migrates/.
 
 CMD ["/workspace/gomatalk", "-f", "/workspace/config/config.toml"]

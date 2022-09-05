@@ -1,55 +1,62 @@
-package main
+package discord
 
 import (
 	"log"
 	"strings"
 	"time"
-
 	"github.com/bwmarrin/discordgo"
+	"github.com/OGA45/gomatalk/pkg/config"
+	global "github.com/OGA45/gomatalk/pkg/global_vars"
+	"github.com/OGA45/gomatalk/pkg/play"
+	"github.com/OGA45/gomatalk/pkg/voice"
 )
 
+var (
+	Dg *discordgo.Session
+)
 // DiscordConnect make a new connection to Discord
 func DiscordConnect() (err error) {
-	dg, err = discordgo.New("Bot " + o.DiscordToken)
+	Dg, err = discordgo.New("Bot " + config.O.Discord.Token)
 	if err != nil {
 		log.Println("FATA: error creating Discord session,", err)
 		return
 	}
 	log.Println("INFO: Bot is Opening")
-	dg.AddHandler(MessageCreateHandler)
-	dg.AddHandler(GuildCreateHandler)
-	// dg.AddHandler(GuildDeleteHandler)
-	dg.AddHandler(VoiceStatusUpdateHandler)
-	dg.AddHandler(ConnectHandler)
-	if o.DiscordNumShard > 1 {
-		dg.ShardCount = o.DiscordNumShard
-		dg.ShardID = o.DiscordShardID
+	Dg.AddHandler(MessageCreateHandler)
+	Dg.AddHandler(GuildCreateHandler)
+	Dg.AddHandler(VoiceStatusUpdateHandler)
+	Dg.AddHandler(ConnectHandler)
+	Dg.AddHandler(SlashCommandHandler)
+	if config.O.Discord.NumShard > 1 {
+		Dg.ShardCount = config.O.Discord.NumShard
+		Dg.ShardID = config.O.Discord.ShardID
 	}
 
-	if o.Debug {
-		dg.LogLevel = discordgo.LogDebug
+	if config.O.Discord.Debug {
+		Dg.LogLevel = discordgo.LogDebug
 	}
 	// Open Websocket
-	err = dg.Open()
+	err = Dg.Open()
 	if err != nil {
 		log.Println("FATA: Error Open():", err)
 		return
 	}
-	_, err = dg.User("@me")
+	_, err = Dg.User("@me")
 	if err != nil {
 		// Login unsuccessful
 		log.Println("FATA:", err)
 		return
 	} // Login successful
+	Adding_slash_commands()
 	log.Println("INFO: Bot is now running. Press CTRL-C to exit.")
 	initRoutine()
-	dg.UpdateGameStatus(0, o.DiscordStatus)
+	Dg.UpdateGameStatus(0, config.O.Discord.Status)
 	return nil
 }
 
 // SearchVoiceChannel search the voice channel id into from guild.
 func SearchVoiceChannel(user string) (voiceChannelID string) {
-	for _, g := range dg.State.Guilds {
+	for _, g := range Dg.State.Guilds {
 		for _, v := range g.VoiceStates {
 			if v.UserID == user {
 				return v.ChannelID
@@ -61,9 +68,9 @@ func SearchVoiceChannel(user string) (voiceChannelID string) {
 
 func UserCountVoiceChannel(voiceChannel string) int {
 	count := 0
-	for _, g := range dg.State.Guilds {
+	for _, g := range Dg.State.Guilds {
 		for _, v := range g.VoiceStates {
-			user, _ := dg.User(v.UserID)
+			user, _ := Dg.User(v.UserID)
 			if !user.Bot {
 				if v.ChannelID == voiceChannel {
 					count++
@@ -76,7 +83,7 @@ func UserCountVoiceChannel(voiceChannel string) int {
 
 // SearchGuild search the guild ID
 func SearchGuild(textChannelID string) (guildID string) {
-	channel, _ := dg.Channel(textChannelID)
+	channel, _ := Dg.Channel(textChannelID)
 	guildID = channel.GuildID
 	return
 }
@@ -84,7 +91,7 @@ func SearchGuild(textChannelID string) (guildID string) {
 // ChMessageSend send a message and auto-remove it in a time
 func ChMessageSend(textChannelID, message string) {
 	for i := 0; i < 10; i++ {
-		_, err := dg.ChannelMessageSend(textChannelID, message)
+		_, err := Dg.ChannelMessageSend(textChannelID, message)
 		if err != nil {
 			time.Sleep(1 * time.Second)
 			continue
@@ -94,7 +101,7 @@ func ChMessageSend(textChannelID, message string) {
 }
 
 func ChFileSend(textChannelID, name, message string) {
-	dg.ChannelFileSend(textChannelID, name, strings.NewReader(message))
+	Dg.ChannelFileSend(textChannelID, name, strings.NewReader(message))
 }
 
 // ChMessageSendEmbed send an embeded messages.
@@ -108,7 +115,7 @@ func ChMessageSendEmbed(textChannelID, title, description string, user discordgo
 	author.IconURL = user.AvatarURL("")
 	embed.Author = &author
 	for i := 0; i < 10; i++ {
-		_, err := dg.ChannelMessageSendEmbed(textChannelID, &embed)
+		_, err := Dg.ChannelMessageSendEmbed(textChannelID, &embed)
 		if err != nil {
 			time.Sleep(1 * time.Second)
 			continue
@@ -118,19 +125,45 @@ func ChMessageSendEmbed(textChannelID, title, description string, user discordgo
 }
 
 func initRoutine() {
-	speechSignal = make(chan SpeechSignal)
-	go GlobalPlay(speechSignal)
+	global.SpeechSignal = make(chan voice.SpeechSignal)
+	go play.GlobalPlay(global.SpeechSignal)
 }
 
 // ConnectHandler
 func ConnectHandler(s *discordgo.Session, connect *discordgo.Connect) {
-	s.UpdateGameStatus(0, o.DiscordStatus)
+	s.UpdateGameStatus(0, config.O.Discord.Status)
+}
+
+// SlashCommandHandler
+func SlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	commandHandlers := map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+		"help": Help,
+		"voices_list": Voices_list,
+		"summon": Summon,
+		"bye": Bye,
+		"stop": Stop,
+		"words_list": Words_list,
+		"add_word": Add_word,
+		"delete_word": Delete_word,
+		"status": Status,
+		"update_voice": Update_voice,
+		"add_bot": Add_bot,
+		"delete_bot": Delete_bot,
+		"bots_list": Bots_list,
+		"random": Random,
+		"update_bot_voice": Update_bot_voice,
+		"random_bot": Random_bot,
+		"reboot": Reboot,
+	}
+	if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
+		h(s, i)
+	}
 }
 
 // GuildCreateHandler
 func GuildCreateHandler(s *discordgo.Session, guild *discordgo.GuildCreate) {
 	log.Println("INFO: Guild Create:", guild.ID)
-	err := CreateGuildDB(guild.ID)
+	err := global.DB.CreateGuild(guild.ID)
 	if err != nil {
 		log.Println("FATA: DB", err)
 		return
@@ -138,22 +171,22 @@ func GuildCreateHandler(s *discordgo.Session, guild *discordgo.GuildCreate) {
 }
 
 func VoiceStatusUpdateHandler(s *discordgo.Session, voice *discordgo.VoiceStateUpdate) {
-	v := voiceInstances[voice.GuildID]
+	v := global.VoiceInstances[voice.GuildID]
 	if v == nil {
 		return
 	}
-	if v.voice == nil {
+	if v.Voice == nil {
 		return
 	}
-	user, _ := dg.User(voice.UserID)
-	botUser, _ := dg.User("@me")
+	user, _ := Dg.User(voice.UserID)
+	botUser, _ := Dg.User("@me")
 
 	if voice.UserID == botUser.ID {
 		if voice == nil || voice.BeforeUpdate == nil || voice.ChannelID == "" {
 			return
 		}
 		if voice.BeforeUpdate.ChannelID != voice.ChannelID {
-			v.voice, _ = dg.ChannelVoiceJoin(v.guildID, voice.ChannelID, false, false)
+			v.Voice, _ = Dg.ChannelVoiceJoin(v.GuildID, voice.ChannelID, false, false)
 		}
 	}
 
@@ -162,21 +195,21 @@ func VoiceStatusUpdateHandler(s *discordgo.Session, voice *discordgo.VoiceStateU
 		return
 	}
 
-	userCount := UserCountVoiceChannel(v.voice.ChannelID)
+	userCount := UserCountVoiceChannel(v.Voice.ChannelID)
 	if userCount == 0 {
 		v.Lock()
 		defer v.Unlock()
-		if v.voice == nil {
+		if v.Voice == nil {
 			log.Println("INFO: Voice channel has already been destroyed")
 			return
 		}
-		if v.session.VoiceConnections[v.guildID] != nil {
-			v.voice.Disconnect()
+		if v.Session.VoiceConnections[v.GuildID] != nil {
+			v.Voice.Disconnect()
 			log.Println("INFO: Voice channel destroyed")
-			mutex.Lock()
-			delete(voiceInstances, v.guildID)
-			mutex.Unlock()
-			ChMessageSend(v.channelID, "終了します")
+			global.Mutex.Lock()
+			delete(global.VoiceInstances, v.GuildID)
+			global.Mutex.Unlock()
+			ChMessageSend(v.ChannelID, config.O.Greeting["nobody"])
 		}
 	}
 }
@@ -184,7 +217,7 @@ func VoiceStatusUpdateHandler(s *discordgo.Session, voice *discordgo.VoiceStateU
 // MessageCreateHandler
 func MessageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	guildID := SearchGuild(m.ChannelID)
-	botList, _ := ListBots(guildID)
+	botList, _ := global.DB.ListBots(guildID)
 	isSpecial := false
 	if m.Author.Bot {
 		if _, ok := botList[m.Author.ID]; !ok {
@@ -192,9 +225,9 @@ func MessageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		isSpecial = true
 	}
-	v := voiceInstances[guildID]
-	if strings.HasPrefix(m.Content, o.DiscordPrefix) {
-		content := strings.Replace(m.Content, o.DiscordPrefix, "", 1)
+	v := global.VoiceInstances[guildID]
+	if strings.HasPrefix(m.Content, config.O.Discord.Prefix) {
+		content := strings.Replace(m.Content, config.O.Discord.Prefix, "", 1)
 		command := strings.Fields(content)
 
 		if len(command) == 0 {
@@ -239,8 +272,8 @@ func MessageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		return
 	}
-	if v != nil {
-		if !isSpecial && v.channelID != m.ChannelID {
+	if v != nil && v.Voice != nil {
+		if !isSpecial && v.ChannelID != m.ChannelID {
 			return
 		}
 		SpeechText(v, m)
