@@ -12,14 +12,14 @@ import (
 )
 
 func CreateVoiceroidWav(speech Speech) (string, error) {
-	wavFileName := fmt.Sprintf("/tmp/voice-%d.wav", time.Now().UnixNano())
-
+	// TTS synthesis routinely takes more than a second; a 1s whole-exchange
+	// timeout caused almost every non-trivial request to fail.
 	client := http.Client{
-		Timeout: 1 * time.Second,
+		Timeout: 15 * time.Second,
 	}
 
 	response, err := client.Get(fmt.Sprintf("%s/api/v1/audiofile?text=%s&name=%s&speed=%f&pitch=%f&range=%f",
-		config.Vo.Voiceroid.BaseURL,
+		config.Vo().Voiceroid.BaseURL,
 		url.QueryEscape(speech.Text),
 		url.QueryEscape(speech.UserInfo.Voice),
 		speech.UserInfo.Speed,
@@ -29,12 +29,23 @@ func CreateVoiceroidWav(speech Speech) (string, error) {
 		return "", err
 	}
 	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("VOICEROID audiofile status %d", response.StatusCode)
+	}
 
-	file, err := os.Create(wavFileName)
+	wavFile, err := os.CreateTemp("", "voice-*.wav")
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
-	io.Copy(file, response.Body)
+	wavFileName := wavFile.Name()
+	if _, err := io.Copy(wavFile, response.Body); err != nil {
+		wavFile.Close()
+		os.Remove(wavFileName)
+		return "", err
+	}
+	if err := wavFile.Close(); err != nil {
+		os.Remove(wavFileName)
+		return "", err
+	}
 	return wavFileName, nil
 }

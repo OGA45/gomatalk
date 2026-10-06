@@ -1,0 +1,7 @@
+# Runtime data and secrets are mounted as volumes (docker-compose.yml); keep
+# them out of the build context and image layers.
+.git
+config.toml
+data
+wav
+voices

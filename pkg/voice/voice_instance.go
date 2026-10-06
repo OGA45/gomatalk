@@ -1,24 +1,28 @@
 package voice
 
 import (
+	"log"
 	"os"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/OGA45/gomatalk/pkg/model"
+	"github.com/bwmarrin/dgvoice"
 	"github.com/bwmarrin/discordgo"
-	"github.com/omatztw/dgvoice"
 )
 
+const playTimeout = 30 * time.Second
+
 type VoiceInstance struct {
-	sync.Mutex
+	sync.Mutex // guards Voice
 	Voice      *discordgo.VoiceConnection
 	Session    *discordgo.Session
-	QueueMutex sync.Mutex
-	VoiceMutex sync.Mutex
+	QueueMutex sync.Mutex // guards Queue, Speaking, NowTalking
+	VoiceMutex sync.Mutex // serializes playback within this instance
 	NowTalking Speech
 	Queue      []Speech
-	Recv       []int16
 	GuildID    string
 	ChannelID  string
 	Speaking   bool
@@ -36,33 +40,67 @@ type Speech struct {
 	WavFile  string
 }
 
+// SetVoice stores the active voice connection under the instance lock.
+func (v *VoiceInstance) SetVoice(vc *discordgo.VoiceConnection) {
+	v.Lock()
+	v.Voice = vc
+	v.Unlock()
+}
+
+// GetVoice returns the active voice connection (nil if none) under the lock.
+func (v *VoiceInstance) GetVoice() *discordgo.VoiceConnection {
+	v.Lock()
+	defer v.Unlock()
+	return v.Voice
+}
+
+// Close disconnects the voice connection if present. It is idempotent and
+// safe to call from concurrent teardown paths.
+func (v *VoiceInstance) Close() {
+	v.Lock()
+	defer v.Unlock()
+	if v.Voice != nil {
+		v.Voice.Disconnect()
+		v.Voice = nil
+	}
+}
+
 func (v *VoiceInstance) PlayQueue(speech Speech) {
-	// add song to queue
-	v.QueueAdd(speech)
+	// キューに追加し、Speaking フラグを原子的にチェック
+	v.QueueMutex.Lock()
+	v.Queue = append(v.Queue, speech)
 	if v.Speaking {
-		// the bot is playing
+		v.QueueMutex.Unlock()
 		return
 	}
+	v.Speaking = true
+	v.QueueMutex.Unlock()
+
 	go func() {
 		// 同一チャンネルで同時に読み上げるのを防ぐ。別のサーバーには影響しないようにしたい。
 		v.VoiceMutex.Lock()
 		defer v.VoiceMutex.Unlock()
 
 		for {
+			// キューの空チェックと Speaking=false を原子的に行う
+			v.QueueMutex.Lock()
 			if len(v.Queue) == 0 {
+				v.Speaking = false
+				v.QueueMutex.Unlock()
 				return
 			}
-			v.NowTalking = v.QueueGetSpeech()
-			v.Speaking = true
-			defer func() {
-				v.Speaking = false
-			}()
-			// v.voice.Speaking(true)
+			v.NowTalking = v.Queue[0]
+			v.QueueMutex.Unlock()
 
-			v.Talk(v.NowTalking)
+			if err := v.Talk(v.NowTalking); err != nil {
+				log.Println("ERROR: Talk failed:", err)
+			}
 
-			v.QueueRemoveFisrt()
-			// v.voice.Speaking(false)
+			v.QueueMutex.Lock()
+			if len(v.Queue) > 0 {
+				v.Queue = v.Queue[1:]
+			}
+			v.QueueMutex.Unlock()
 		}
 	}()
 }
@@ -70,11 +108,14 @@ func (v *VoiceInstance) PlayQueue(speech Speech) {
 func (v *VoiceInstance) Talk(speech Speech) error {
 	var fileName string
 	var err error
+	cleanup := false
 	if speech.WavFile != "" {
 		fileName = "wav/" + speech.WavFile
 	} else {
 		if IsVoiceRoid(speech.UserInfo.Voice) {
 			fileName, err = CreateVoiceroidWav(speech)
+		} else if strings.HasSuffix(speech.UserInfo.Voice, AivisSpeechSuffix) {
+			fileName, err = createAivisSpeechWav(speech)
 		} else if IsVoiceVox(speech.UserInfo.Voice) {
 			fileName, err = CreateVoiceVoxWav(speech)
 		} else if IsAquesTalk(speech.UserInfo.Voice) {
@@ -83,76 +124,78 @@ func (v *VoiceInstance) Talk(speech Speech) error {
 			fileName, err = CreateWav(speech)
 		}
 		if err != nil {
-			// VOICEROIDやVOICEBOXが起動していない場合に通常音声で再生する
-			fallbackSpeech := Speech{
-				Text: speech.Text,
-				UserInfo: model.UserInfo{
-					Voice:     "normal",
-					Speed:     1.3,
-					Tone:      1,
-					Intone:    0,
-					Threshold: 0.5,
-					AllPass:   0,
-					Volume:    1,
-				},
-				WavFile: speech.WavFile,
-			}
-			fileName, err = CreateWav(fallbackSpeech)
-		}
-		defer os.Remove(fileName)
-		if err != nil {
 			return err
 		}
+		cleanup = true
 	}
-	c1 := make(chan string, 1)
-	go func() {
-		dgvoice.PlayAudioFile(v.Voice, fileName, v.Stop)
-		close(c1)
-	}()
+	if cleanup {
+		defer os.Remove(fileName)
+	}
+
+	vc := v.GetVoice()
+	if vc == nil {
+		return nil
+	}
+
+	// Drain any stale stop token left by a previous playback; otherwise the
+	// next playback's killer goroutine would consume it and truncate this
+	// utterance immediately.
 	select {
-	case <-c1:
+	case <-v.Stop:
+	default:
+	}
+
+	done := make(chan struct{})
+	go func() {
+		dgvoice.PlayAudioFile(vc, fileName, v.Stop, v.ChannelID)
+		close(done)
+	}()
+
+	t := time.NewTimer(playTimeout)
+	defer t.Stop()
+	select {
+	case <-done:
 		return nil
-	case <-time.After(30 * time.Second):
+	case <-t.C:
 		v.StopTalking()
+		<-done // wait for the playback goroutine to fully unwind
 		return nil
 	}
 }
 
+// StopTalking signals the current playback to stop. The send is non-blocking
+// so a caller (interaction/command handler) can never block on it, and the
+// Speaking flag is read under QueueMutex to avoid a data race.
 func (v *VoiceInstance) StopTalking() {
-	if v.Speaking {
-		v.Stop <- true
+	v.QueueMutex.Lock()
+	speaking := v.Speaking
+	v.QueueMutex.Unlock()
+	if !speaking {
+		return
+	}
+	select {
+	case v.Stop <- true:
+	default:
 	}
 }
 
-// QueueGetSong
-func (v *VoiceInstance) QueueGetSpeech() (speech Speech) {
-	v.QueueMutex.Lock()
-	defer v.QueueMutex.Unlock()
-	if len(v.Queue) != 0 {
-		return v.Queue[0]
+// aivisFallbackLoggedAt throttles the fallback warning to once a minute.
+var aivisFallbackLoggedAt atomic.Int64
+
+// createAivisSpeechWav synthesizes with AivisSpeech. That engine runs on
+// another host and has no fallback engine, so when it is unavailable (host
+// down, model removed) the line is read with the default Open JTalk voice
+// instead of being dropped; the user's saved voice is left untouched.
+func createAivisSpeechWav(speech Speech) (string, error) {
+	fileName, err := CreateVoiceVoxWav(speech)
+	if err == nil {
+		return fileName, nil
 	}
-	return
-}
-
-// QueueAdd
-func (v *VoiceInstance) QueueAdd(speech Speech) {
-	v.QueueMutex.Lock()
-	defer v.QueueMutex.Unlock()
-	v.Queue = append(v.Queue, speech)
-}
-
-// QueueClean
-func (v *VoiceInstance) QueueClean() {
-	v.QueueMutex.Lock()
-	defer v.QueueMutex.Unlock()
-	v.Queue = []Speech{}
-}
-
-// QueueRemoveFirst
-func (v *VoiceInstance) QueueRemoveFisrt() {
-	v.QueueMutex.Lock()
-	defer v.QueueMutex.Unlock()
-	if len(v.Queue) != 0 {
-		v.Queue = v.Queue[1:]
+	if now := time.Now().UnixNano(); now-aivisFallbackLoggedAt.Load() > int64(time.Minute) {
+		aivisFallbackLoggedAt.Store(now)
+		log.Printf("WARN: AivisSpeech unavailable for %s (%v); reading with Open JTalk instead", speech.UserInfo.Voice, err)
 	}
+	fallback := speech
+	fallback.UserInfo.Voice = "normal"
+	return CreateWav(fallback)
 }

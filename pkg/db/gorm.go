@@ -14,6 +14,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/logger"
 )
 
 type Database struct {
@@ -39,7 +40,16 @@ func NewDatabase(dbName string) *Database {
 
 func (c *Database) Connect() error {
 	var err error
-	c.DB, err = gorm.Open(sqlite.Open(c.DBName), &gorm.Config{})
+	dbLogger := logger.New(
+		log.New(log.Writer(), "", log.LstdFlags),
+		logger.Config{
+			SlowThreshold: 2 * time.Second,
+			LogLevel:      logger.Warn,
+		},
+	)
+	c.DB, err = gorm.Open(sqlite.Open(c.DBName), &gorm.Config{
+		Logger: dbLogger,
+	})
 	if err != nil {
 		log.Println("FATA: ", err)
 	}
@@ -177,17 +187,28 @@ func (c *Database) Migrate() error {
 }
 
 func random(min, max float32) float64 {
-	rand.Seed(time.Now().UnixNano())
 	return float64(rand.Float32()*(max-min) + min)
 }
 
 func MakeRandom() model.UserInfo {
-
-	rand.Seed(time.Now().UnixNano())
-	num := rand.Intn(len(voice.Voices()))
-
 	user := model.UserInfo{}
-	user.Voice = voice.VoiceList()[num]
+
+	// Snapshot the voice list ONCE: indexing a length from a separate Voices()
+	// call could go out of range if the set changes between the two calls.
+	// AivisSpeech voices are opt-in only: they cost several CPU cores per
+	// line, so random assignment must not hand them out.
+	var list []string
+	for _, name := range voice.VoiceList() {
+		if !strings.HasSuffix(name, voice.AivisSpeechSuffix) {
+			list = append(list, name)
+		}
+	}
+	if len(list) == 0 {
+		user.Voice = "normal"
+	} else {
+		user.Voice = list[rand.Intn(len(list))]
+	}
+
 	user.Speed = random(0.5, 2)
 	if voice.IsVoiceRoid(user.Voice) {
 		user.Tone = random(0.5, 2)

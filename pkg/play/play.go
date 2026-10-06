@@ -10,15 +10,10 @@ import (
 	"github.com/OGA45/gomatalk/pkg/voice"
 )
 
-const ()
-
 // GlobalPlay talk
 func GlobalPlay(speechSig chan voice.SpeechSignal) {
-	for {
-		select {
-		case speech := <-speechSig:
-			speech.V.PlayQueue(speech.Data)
-		}
+	for speech := range speechSig {
+		speech.V.PlayQueue(speech.Data)
 	}
 }
 
@@ -33,16 +28,24 @@ func ReplaceWords(guildID string, text *string) error {
 		log.Println("ERR: Cannot get word list.")
 		return err
 	}
+	if len(wordList) == 0 {
+		return nil
+	}
 
-	// Replace long word first
+	// Replace longer words first (NewReplacer tries replacements in argument
+	// order at each position), and do it in a single pass so substituted
+	// output is never re-replaced by a later rule.
 	keys := make([]string, 0, len(wordList))
 	for k := range wordList {
 		keys = append(keys, k)
 	}
 	sort.Slice(keys, func(i, j int) bool { return len(keys[i]) > len(keys[j]) })
+
+	pairs := make([]string, 0, len(keys)*2)
 	for _, k := range keys {
-		*text = strings.Replace(*text, k, wordList[k], -1)
+		pairs = append(pairs, k, wordList[k])
 	}
+	*text = strings.NewReplacer(pairs...).Replace(*text)
 
 	return nil
 }

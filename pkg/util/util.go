@@ -1,24 +1,20 @@
 package util
 
 import (
-	"log"
 	"math/rand"
 	"os"
-	"time"
 )
 
+// Write writes content to filename, returning any error to the caller.
 func Write(filename, content string) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		log.Println("FATA: ", err) //ファイルが開けなかったときエラー出力
-		return err
-	}
-	defer file.Close()
-	file.Write(([]byte)(content))
-	return nil
+	return os.WriteFile(filename, []byte(content), 0644)
 }
 
+// RandomInt returns a pseudo-random int in [min, max).
+// The global math/rand source is auto-seeded (Go 1.20+); do NOT reseed per call.
 func RandomInt(min, max int) int {
-	rand.Seed(time.Now().UnixNano())
+	if max <= min {
+		return min
+	}
 	return rand.Intn(max-min) + min
 }

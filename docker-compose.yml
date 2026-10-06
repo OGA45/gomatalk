@@ -1,15 +1,45 @@
-version: "3.9"
 services:
   gomatalk:
     build:
       context: .
     container_name: gomatalk
     restart: always
+    # main.go dumps goroutines and exits if shutdown hangs for 25s; give it
+    # time to do so before docker falls back to SIGKILL.
+    stop_grace_period: 30s
+    depends_on:
+      voicevox-engine:
+        condition: service_started
     environment:
       TZ: Asia/Tokyo
+    # Discord Activity backend (pkg/activity). Front this with a TLS reverse
+    # proxy that maps the Activity URL prefix "/" to this port.
     tmpfs: /tmp
     volumes:
       - ./wav:/workspace/wav
       - ./config.toml:/workspace/config/config.toml
       - ./data:/workspace/data
       - ./voices:/workspace/voices
+    networks:
+      - default
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-network"
+      # フロント(静的) + /api/* + /ws/* を同じFastAPIにまとめて流す
+      - "traefik.http.routers.gomatalk_activity.rule=Host(`gomatalk.oga.ninja`)"
+      - "traefik.http.routers.gomatalk_activity.entrypoints=websecure"
+      - "traefik.http.routers.gomatalk_activity.tls=true"
+      - "traefik.http.services.gomatalk_activity.loadbalancer.server.port=8080"
+
+  voicevox-engine:
+    image: voicevox/voicevox_engine:cpu-latest
+    container_name: voicevox-engine
+    restart: always
+    environment:
+      TZ: Asia/Tokyo
+    ports:
+      - "50021:50021"
+networks:
+  traefik-network:
+    external: true

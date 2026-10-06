@@ -5,18 +5,24 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"time"
 
 	"github.com/OGA45/gomatalk/pkg/config"
-	"github.com/OGA45/gomatalk/pkg/util"
 )
 
 func CreateAquestalkWav(speech Speech) (string, error) {
-	wavFileName := fmt.Sprintf("/tmp/voice-%d.wav", time.Now().UnixNano())
-	textFileName := fmt.Sprintf("/tmp/voice-%d.txt", time.Now().UnixNano())
+	wavFile, err := os.CreateTemp("", "voice-*.wav")
+	if err != nil {
+		log.Println("ERROR: cannot create wav temp file:", err)
+		return "", err
+	}
+	wavFileName := wavFile.Name()
+	wavFile.Close()
 
-	util.Write(textFileName, speech.Text)
-
+	textFileName, err := writeTempText(speech.Text)
+	if err != nil {
+		os.Remove(wavFileName)
+		return "", err
+	}
 	defer os.Remove(textFileName)
 
 	cmd := []string{
@@ -26,11 +32,11 @@ func CreateAquestalkWav(speech Speech) (string, error) {
 		"-g", fmt.Sprintf("%g", (speech.UserInfo.Volume+20)*2.5),
 	}
 
-	run := exec.Command(config.Aq.Aquestalk.ExePath, cmd...)
+	run := exec.Command(config.Aq().Aquestalk.ExePath, cmd...)
 
-	err := run.Run()
-	if err != nil {
-		log.Println("FATA: Error run():", err)
+	if err := run.Run(); err != nil {
+		log.Println("ERROR: AquesTalk run failed:", err)
+		os.Remove(wavFileName)
 		return "", err
 	}
 

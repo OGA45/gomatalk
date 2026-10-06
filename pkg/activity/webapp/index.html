@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>gomatalk 設定</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- 段階的ローディング画面（空白を出さない） -->
+    <div id="loading" class="overlay" role="status" aria-live="polite">
+      <div class="loading-box">
+        <div class="spinner" aria-hidden="true"></div>
+        <p id="loading-text" class="loading-text">Discordに接続中…</p>
+      </div>
+    </div>
+
+    <!-- 致命的エラー画面 -->
+    <div id="fatal" class="overlay" role="alert" hidden>
+      <div class="fatal-box">
+        <div class="fatal-icon" aria-hidden="true">!</div>
+        <h1 class="fatal-title">読み込みに失敗しました</h1>
+        <p id="fatal-message" class="fatal-message"></p>
+        <button type="button" id="reload-btn" class="btn btn-primary">再読み込み</button>
+      </div>
+    </div>
+
+    <!-- 本体（読み込み完了まで hidden） -->
+    <div id="app" hidden>
+      <header class="app-header">
+        <h1 class="app-title">gomatalk 設定</h1>
+        <span id="username" class="app-user" title=""></span>
+      </header>
+
+      <div class="tabs" role="tablist" aria-label="設定カテゴリ">
+        <button type="button" id="tab-voice" class="tab" role="tab" aria-selected="true" aria-controls="panel-voice" tabindex="0">音声設定</button>
+        <button type="button" id="tab-dict" class="tab" role="tab" aria-selected="false" aria-controls="panel-dict" tabindex="-1">辞書</button>
+      </div>
+
+      <main class="app-main">
+        <!-- ============ 音声設定タブ ============ -->
+        <section id="panel-voice" class="panel" role="tabpanel" aria-labelledby="tab-voice">
+          <div class="field">
+            <label class="field-label" for="voice-select">声</label>
+            <select id="voice-select" class="control select"></select>
+          </div>
+
+          <p id="engine-notice" class="notice" hidden></p>
+
+          <div id="params" class="params">
+            <div class="param-row" data-param="speed">
+              <span class="param-label" id="p-speed-label">速度</span>
+              <div class="param-controls">
+                <input type="range" class="param-range" id="p-speed-range" data-param="speed" aria-labelledby="p-speed-label" />
+                <input type="number" class="param-number" id="p-speed-num" data-param="speed" inputmode="decimal" aria-label="速度（数値入力）" />
+              </div>
+            </div>
+            <div class="param-row" data-param="tone">
+              <span class="param-label" id="p-tone-label">音の高さ</span>
+              <div class="param-controls">
+                <input type="range" class="param-range" id="p-tone-range" data-param="tone" aria-labelledby="p-tone-label" />
+                <input type="number" class="param-number" id="p-tone-num" data-param="tone" inputmode="decimal" aria-label="音の高さ（数値入力）" />
+              </div>
+            </div>
+            <div class="param-row" data-param="intone">
+              <span class="param-label" id="p-intone-label">イントネーション</span>
+              <div class="param-controls">
+                <input type="range" class="param-range" id="p-intone-range" data-param="intone" aria-labelledby="p-intone-label" />
+                <input type="number" class="param-number" id="p-intone-num" data-param="intone" inputmode="decimal" aria-label="イントネーション（数値入力）" />
+              </div>
+            </div>
+            <div class="param-row" data-param="threshold">
+              <span class="param-label" id="p-threshold-label">有声/無声しきい値</span>
+              <div class="param-controls">
+                <input type="range" class="param-range" id="p-threshold-range" data-param="threshold" aria-labelledby="p-threshold-label" />
+                <input type="number" class="param-number" id="p-threshold-num" data-param="threshold" inputmode="decimal" aria-label="有声/無声しきい値（数値入力）" />
+              </div>
+            </div>
+            <div class="param-row" data-param="allpass">
+              <span class="param-label" id="p-allpass-label">声質（オールパス）</span>
+              <div class="param-controls">
+                <input type="range" class="param-range" id="p-allpass-range" data-param="allpass" aria-labelledby="p-allpass-label" />
+                <input type="number" class="param-number" id="p-allpass-num" data-param="allpass" inputmode="decimal" aria-label="声質（数値入力）" />
+              </div>
+            </div>
+            <div class="param-row" data-param="volume">
+              <span class="param-label" id="p-volume-label">音量</span>
+              <div class="param-controls">
+                <input type="range" class="param-range" id="p-volume-range" data-param="volume" aria-labelledby="p-volume-label" />
+                <input type="number" class="param-number" id="p-volume-num" data-param="volume" inputmode="decimal" aria-label="音量（数値入力）" />
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="button" id="save-btn" class="btn btn-primary">保存</button>
+            <button type="button" id="random-btn" class="btn btn-secondary">ランダムに変更</button>
+          </div>
+          <p id="dirty-hint" class="dirty-hint" hidden>未保存の変更があります</p>
+        </section>
+
+        <!-- ============ 辞書タブ ============ -->
+        <section id="panel-dict" class="panel" role="tabpanel" aria-labelledby="tab-dict" hidden>
+          <!-- DM起動時（ギルド無し） -->
+          <div id="dict-dm" class="state-box" hidden>
+            <div class="state-icon" aria-hidden="true">#</div>
+            <p class="state-title">サーバー内で起動すると辞書を編集できます</p>
+            <p class="state-desc">辞書はサーバーごとに管理されます。DMではなく、参加しているサーバーのボイスチャンネルからこのアプリを開いてください。</p>
+          </div>
+
+          <div id="dict-main">
+            <!-- 追加フォーム -->
+            <form id="add-form" class="add-form" novalidate>
+              <div class="add-inputs">
+                <div class="field">
+                  <label class="field-label" for="word-input">単語</label>
+                  <input type="text" id="word-input" class="control text-input" maxlength="64" autocomplete="off" enterkeyhint="next" aria-describedby="add-error" />
+                </div>
+                <div class="field">
+                  <label class="field-label" for="reading-input">読み</label>
+                  <input type="text" id="reading-input" class="control text-input" maxlength="64" autocomplete="off" enterkeyhint="done" aria-describedby="add-error" />
+                </div>
+              </div>
+              <button type="submit" id="add-btn" class="btn btn-primary">追加</button>
+              <p id="add-error" class="inline-error" role="alert" hidden></p>
+            </form>
+
+            <!-- 検索＋件数 -->
+            <div class="search-bar">
+              <div class="search-input-wrap">
+                <input type="search" id="search-input" class="control text-input" placeholder="単語・読みで絞り込み" autocomplete="off" aria-label="辞書を検索" />
+                <button type="button" id="search-clear" class="btn-clear" aria-label="検索をクリア" hidden>クリア</button>
+              </div>
+              <span id="word-count" class="word-count" aria-live="polite"></span>
+            </div>
+
+            <!-- 一覧 -->
+            <ul id="word-list" class="word-list" aria-label="登録単語一覧"></ul>
+
+            <!-- 状態表示 -->
+            <div id="dict-empty" class="state-box" hidden>
+              <p class="state-title">まだ単語が登録されていません</p>
+              <p class="state-desc">上のフォームから、読み間違えられやすい単語とその読みを追加してください。</p>
+            </div>
+            <div id="dict-noresults" class="state-box" hidden>
+              <p id="noresults-title" class="state-title"></p>
+              <button type="button" id="noresults-clear" class="btn btn-secondary">検索をクリア</button>
+            </div>
+            <div id="dict-error" class="state-box state-error" role="alert" hidden>
+              <p class="state-title"><span class="err-mark" aria-hidden="true">!</span> <span id="dict-error-msg"></span></p>
+              <button type="button" id="dict-retry" class="btn btn-secondary">再読み込み</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- トースト共通領域 -->
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

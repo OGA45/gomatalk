@@ -1,6 +1,7 @@
 package discord
 
 import (
+	"errors"
 	"log"
 	"strings"
 	"time"
@@ -18,7 +19,7 @@ var (
 
 // DiscordConnect make a new connection to Discord
 func DiscordConnect() (err error) {
-	Dg, err = discordgo.New("Bot " + config.O.Discord.Token)
+	Dg, err = discordgo.New("Bot " + config.O().Discord.Token)
 	if err != nil {
 		log.Println("FATA: error creating Discord session,", err)
 		return
@@ -27,14 +28,15 @@ func DiscordConnect() (err error) {
 	Dg.AddHandler(MessageCreateHandler)
 	Dg.AddHandler(GuildCreateHandler)
 	Dg.AddHandler(VoiceStatusUpdateHandler)
+	Dg.AddHandler(VoiceServerUpdateHandler)
 	Dg.AddHandler(ConnectHandler)
 	Dg.AddHandler(SlashCommandHandler)
-	if config.O.Discord.NumShard > 1 {
-		Dg.ShardCount = config.O.Discord.NumShard
-		Dg.ShardID = config.O.Discord.ShardID
+	if config.O().Discord.NumShard > 1 {
+		Dg.ShardCount = config.O().Discord.NumShard
+		Dg.ShardID = config.O().Discord.ShardID
 	}
 
-	if config.O.Discord.Debug {
+	if config.O().Discord.Debug {
 		Dg.LogLevel = discordgo.LogDebug
 	}
 	// Open Websocket
@@ -49,11 +51,22 @@ func DiscordConnect() (err error) {
 		log.Println("FATA:", err)
 		return
 	} // Login successful
-	Adding_slash_commands()
-	log.Println("INFO: Bot is now running. Press CTRL-C to exit.")
 	initRoutine()
-	Dg.UpdateGameStatus(0, config.O.Discord.Status)
+	gatewayWatchdog()
+	go Adding_slash_commands()
+	log.Println("INFO: Bot is now running. Press CTRL-C to exit.")
+	Dg.UpdateGameStatus(0, config.O().Discord.Status)
 	return nil
+}
+
+// Shutdown disconnects all voice instances and closes the Discord session.
+func Shutdown() {
+	global.CloseAllInstances()
+	if Dg != nil {
+		if err := Dg.Close(); err != nil {
+			log.Println("ERROR: Dg.Close:", err)
+		}
+	}
 }
 
 // SearchVoiceChannel search the voice channel id into from guild.
@@ -72,58 +85,84 @@ func UserCountVoiceChannel(voiceChannel string) int {
 	count := 0
 	for _, g := range Dg.State.Guilds {
 		for _, v := range g.VoiceStates {
-			user, _ := Dg.User(v.UserID)
+			if v.ChannelID != voiceChannel {
+				continue
+			}
+			user, err := Dg.User(v.UserID)
+			if err != nil || user == nil {
+				continue
+			}
 			if !user.Bot {
-				if v.ChannelID == voiceChannel {
-					count++
-				}
+				count++
 			}
 		}
 	}
 	return count
 }
 
-// SearchGuild search the guild ID
+// SearchGuild returns the guild ID for a text channel, or "" if it cannot be
+// resolved (Dg.Channel can return a nil channel + error).
 func SearchGuild(textChannelID string) (guildID string) {
-	channel, _ := Dg.Channel(textChannelID)
-	guildID = channel.GuildID
-	return
+	channel, err := Dg.Channel(textChannelID)
+	if err != nil || channel == nil {
+		return ""
+	}
+	return channel.GuildID
 }
 
-// ChMessageSend send a message and auto-remove it in a time
+// ChMessageSend sends a message, retrying a few times on transient errors and
+// bailing immediately on permanent (4xx) ones instead of blocking ~10s.
 func ChMessageSend(textChannelID, message string) {
-	for i := 0; i < 10; i++ {
+	for attempt := 0; attempt < 3; attempt++ {
 		_, err := Dg.ChannelMessageSend(textChannelID, message)
-		if err != nil {
-			time.Sleep(1 * time.Second)
-			continue
+		if err == nil {
+			return
 		}
-		break
+		if isPermanentRESTError(err) {
+			log.Println("ERROR: ChannelMessageSend:", err)
+			return
+		}
+		time.Sleep(500 * time.Millisecond)
 	}
 }
 
 func ChFileSend(textChannelID, name, message string) {
-	Dg.ChannelFileSend(textChannelID, name, strings.NewReader(message))
+	if _, err := Dg.ChannelFileSend(textChannelID, name, strings.NewReader(message)); err != nil {
+		log.Println("ERROR: ChannelFileSend:", err)
+	}
 }
 
-// ChMessageSendEmbed send an embedded messages.
+// ChMessageSendEmbed send an embeded messages.
 func ChMessageSendEmbed(textChannelID, title, description string, user discordgo.User) {
 	embed := discordgo.MessageEmbed{}
 	embed.Title = title
 	embed.Description = description
-	embed.Color = 0xb20000
+	embed.Color = colorError
 	author := discordgo.MessageEmbedAuthor{}
 	author.Name = user.Username
 	author.IconURL = user.AvatarURL("")
 	embed.Author = &author
-	for i := 0; i < 10; i++ {
+	for attempt := 0; attempt < 3; attempt++ {
 		_, err := Dg.ChannelMessageSendEmbed(textChannelID, &embed)
-		if err != nil {
-			time.Sleep(1 * time.Second)
-			continue
+		if err == nil {
+			return
 		}
-		break
+		if isPermanentRESTError(err) {
+			log.Println("ERROR: ChannelMessageSendEmbed:", err)
+			return
+		}
+		time.Sleep(500 * time.Millisecond)
 	}
+}
+
+// isPermanentRESTError reports whether err is a 4xx Discord REST error that
+// will not be fixed by retrying.
+func isPermanentRESTError(err error) bool {
+	var rerr *discordgo.RESTError
+	if errors.As(err, &rerr) && rerr.Response != nil {
+		return rerr.Response.StatusCode >= 400 && rerr.Response.StatusCode < 500
+	}
+	return false
 }
 
 func initRoutine() {
@@ -131,13 +170,30 @@ func initRoutine() {
 	go play.GlobalPlay(global.SpeechSignal)
 }
 
+func recoverHandler(name string) {
+	if r := recover(); r != nil {
+		log.Printf("ERROR: recovered from panic in %s: %v", name, r)
+	}
+}
+
+// VoiceServerUpdateHandler は音声サーバー移行を検知してログ出力する
+// （自動再接続は yeongaori 版 DAVE 実装の制約により無効化）
+func VoiceServerUpdateHandler(s *discordgo.Session, vs *discordgo.VoiceServerUpdate) {
+	v := global.GetInstance(vs.GuildID)
+	if v == nil || v.GetVoice() == nil {
+		return
+	}
+	log.Printf("INFO: Voice server update detected for guild %s (internal reconnect)", vs.GuildID)
+}
+
 // ConnectHandler
 func ConnectHandler(s *discordgo.Session, connect *discordgo.Connect) {
-	s.UpdateGameStatus(0, config.O.Discord.Status)
+	s.UpdateGameStatus(0, config.O().Discord.Status)
 }
 
 // SlashCommandHandler
 func SlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	defer recoverHandler("SlashCommandHandler")
 	commandHandlers := map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"help":             Help,
 		"voices_list":      Voices_list,
@@ -164,6 +220,7 @@ func SlashCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 // GuildCreateHandler
 func GuildCreateHandler(s *discordgo.Session, guild *discordgo.GuildCreate) {
+	defer recoverHandler("GuildCreateHandler")
 	log.Println("INFO: Guild Create:", guild.ID)
 	err := global.DB.CreateGuild(guild.ID)
 	if err != nil {
@@ -172,53 +229,62 @@ func GuildCreateHandler(s *discordgo.Session, guild *discordgo.GuildCreate) {
 	}
 }
 
-func VoiceStatusUpdateHandler(s *discordgo.Session, voice *discordgo.VoiceStateUpdate) {
-	v := global.VoiceInstances[voice.GuildID]
-	if v == nil {
-		return
-	}
-	if v.Voice == nil {
-		return
-	}
-	user, _ := Dg.User(voice.UserID)
-	botUser, _ := Dg.User("@me")
+func VoiceStatusUpdateHandler(s *discordgo.Session, vsu *discordgo.VoiceStateUpdate) {
+	defer recoverHandler("VoiceStatusUpdateHandler")
 
-	if voice.UserID == botUser.ID {
-		if voice == nil || voice.BeforeUpdate == nil || voice.ChannelID == "" {
-			return
+	// Bot 自身の入退室/移動を常時記録する（可視の入退出の決定的な証拠になる）。
+	if s.State != nil && s.State.User != nil && vsu.UserID == s.State.User.ID {
+		before := ""
+		if vsu.BeforeUpdate != nil {
+			before = vsu.BeforeUpdate.ChannelID
 		}
-		if voice.BeforeUpdate.ChannelID != voice.ChannelID {
-			v.Voice, _ = Dg.ChannelVoiceJoin(v.GuildID, voice.ChannelID, false, false)
+		if before != vsu.ChannelID {
+			log.Printf("INFO: bot voice state changed in guild %s: %q -> %q", vsu.GuildID, before, vsu.ChannelID)
 		}
 	}
 
-	if user.Bot && voice.UserID != botUser.ID {
-		// Ignore Bot
+	v := global.GetInstance(vsu.GuildID)
+	if v == nil || v.GetVoice() == nil {
 		return
 	}
 
-	userCount := UserCountVoiceChannel(v.Voice.ChannelID)
-	if userCount == 0 {
-		v.Lock()
-		defer v.Unlock()
-		if v.Voice == nil {
-			log.Println("INFO: Voice channel has already been destroyed")
-			return
+	botID := ""
+	if s.State != nil && s.State.User != nil {
+		botID = s.State.User.ID
+	}
+
+	// The bot itself was moved between channels by a user -> follow it.
+	// BeforeUpdate.ChannelID must be non-empty: a transition from "" is a
+	// (re)join, not a move, and re-joining here would race the library's own
+	// reconnect logic.
+	if vsu.UserID == botID {
+		if vsu.BeforeUpdate != nil && vsu.BeforeUpdate.ChannelID != "" && vsu.ChannelID != "" && vsu.BeforeUpdate.ChannelID != vsu.ChannelID {
+			if vc, err := Dg.ChannelVoiceJoin(v.GuildID, vsu.ChannelID, false, false); err == nil {
+				v.SetVoice(vc)
+			}
 		}
-		if v.Session.VoiceConnections[v.GuildID] != nil {
-			v.Voice.Disconnect()
-			log.Println("INFO: Voice channel destroyed")
-			global.Mutex.Lock()
-			delete(global.VoiceInstances, v.GuildID)
-			global.Mutex.Unlock()
-			ChMessageSend(v.ChannelID, config.O.Greeting["nobody"])
-		}
+		return
+	}
+
+	// Ignore other bots' voice state changes.
+	if user, err := Dg.User(vsu.UserID); err == nil && user != nil && user.Bot {
+		return
+	}
+
+	// If no humans remain in the bot's channel, leave.
+	if UserCountVoiceChannel(v.ChannelID) == 0 {
+		closeConnection(v)
+		ChMessageSend(v.ChannelID, config.O().Greeting["nobody"])
 	}
 }
 
 // MessageCreateHandler
 func MessageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+	defer recoverHandler("MessageCreateHandler")
 	guildID := SearchGuild(m.ChannelID)
+	if guildID == "" {
+		return
+	}
 	botList, _ := global.DB.ListBots(guildID)
 	isSpecial := false
 	if m.Author.Bot {
@@ -227,9 +293,9 @@ func MessageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		isSpecial = true
 	}
-	v := global.VoiceInstances[guildID]
-	if strings.HasPrefix(m.Content, config.O.Discord.Prefix) {
-		content := strings.Replace(m.Content, config.O.Discord.Prefix, "", 1)
+	v := global.GetInstance(guildID)
+	if strings.HasPrefix(m.Content, config.O().Discord.Prefix) {
+		content := strings.Replace(m.Content, config.O().Discord.Prefix, "", 1)
 		command := strings.Fields(content)
 
 		if len(command) == 0 {
@@ -274,10 +340,10 @@ func MessageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		return
 	}
-	if v != nil && v.Voice != nil {
+	if v != nil && v.GetVoice() != nil {
 		if !isSpecial && v.ChannelID != m.ChannelID {
 			return
 		}
-		SpeechText(v, m)
+		SpeechText(v, m, botList)
 	}
 }

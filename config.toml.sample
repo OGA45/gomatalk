@@ -6,6 +6,16 @@
 #  shardCount = 3
 #  shardID = 0
 
+# Discord Activity (iframe 埋め込み Web アプリ) 用バックエンド。
+# enabled=true にすると :8080 で HTTP サーバーを起動する。
+# clientID/clientSecret は Discord Developer Portal の OAuth2 情報。
+# clientSecret はサーバー内でのみ使用され、ログ・レスポンスには出力されない。
+[activity]
+enabled = false           # true で有効化
+listen = ":8080"          # 省略時 ":8080"
+clientID = ""             # Discord Application (Client) ID
+clientSecret = ""         # OAuth2 Client Secret
+
 [greeting]
 join = "おあ"
 leave = "おつぅ"
@@ -15,3 +25,28 @@ nobody = "すやぁ"
 novc = "まずVCにはいろ( ˘ω˘ )"
 onlyBot = "声変えられるのはBotだけ( ˘ω˘ )"
 
+# VOICEVOX Engine (docker-compose で起動。音声一覧は /speakers API から自動取得)
+[voicevox]
+baseURL = "http://voicevox-engine:50021"
+# 任意: baseURL に接続できない・5xx を返すときに使う予備のエンジン。
+# 例: baseURL を GPU サーバーにして、ここに同じ compose の CPU 版を指定する。
+# fallbackURL = "http://voicevox-engine:50021"
+
+# 任意: AivisSpeech Engine（VOICEVOX 互換 API）。声は「まお@Aivis」のように
+# 末尾に @Aivis が付いた名前で一覧に出る。CPU 負荷が高いのでランダム選択には出ない。
+# [aivisspeech]
+# baseURL = "http://192.168.100.6:10101"
+
+# VOICEROID (Windows + 外部APIサーバーが必要。Docker単体では動作不可)
+# [voiceroid]
+# baseURL = "http://host.docker.internal:50031"
+#
+# [[voiceroid.voice]]
+# name = "voiceroid_name"
+
+# AquesTalk (実行ファイルが必要)
+# [aquestalk]
+# exePath = "/usr/local/bin/aquestalk"
+#
+# [[aquestalk.voice]]
+# name = "aq_yukkuri"
